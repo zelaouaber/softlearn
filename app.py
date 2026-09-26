@@ -2519,8 +2519,10 @@ def download_certificate(niveau_id):
     finally:
         conn.close()
 
+
 # =========================================================
-# ROUTE TEMPORAIRE : INITIALISER LA BASE (a supprimer apres usage)
+# ROUTE TEMPORAIRE : INITIALISER LA BASE POSTGRESQL
+# ⚠️ À SUPPRIMER APRÈS UTILISATION
 # =========================================================
 
 @app.route("/init-db-secret-xyz-2026")
@@ -2536,9 +2538,7 @@ def init_db_secret():
         conn = psycopg2.connect(config.DATABASE_URL)
         cur = conn.cursor()
 
-        # Executer le schema (copiez le contenu de init_postgres.py ici)
-        # ... (voir ci-dessous pour la version courte)
-
+        # ---------- USERS ----------
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -2558,9 +2558,200 @@ def init_db_secret():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
-        # ... et ainsi de suite pour toutes les tables
 
-        # Creer admin par defaut
+        # ---------- FORMATIONS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS formations (
+                id SERIAL PRIMARY KEY,
+                nom TEXT NOT NULL,
+                description TEXT,
+                categorie TEXT DEFAULT 'data',
+                plateforme_defaut TEXT,
+                trainer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # ---------- NIVEAUX ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS niveaux (
+                id SERIAL PRIMARY KEY,
+                formation_id INTEGER NOT NULL REFERENCES formations(id) ON DELETE CASCADE,
+                numero INTEGER NOT NULL,
+                titre TEXT NOT NULL,
+                description TEXT,
+                prix REAL NOT NULL DEFAULT 0,
+                UNIQUE(formation_id, numero)
+            );
+        """)
+
+        # ---------- INSCRIPTIONS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS inscriptions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                niveau_id INTEGER NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+                formation_id INTEGER NOT NULL REFERENCES formations(id) ON DELETE CASCADE,
+                progression INTEGER DEFAULT 0,
+                statut TEXT DEFAULT 'inactive',
+                date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                date_completion TIMESTAMP,
+                UNIQUE(user_id, niveau_id)
+            );
+        """)
+
+        # ---------- PAIEMENTS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS paiements (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                niveau_id INTEGER NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+                montant REAL NOT NULL,
+                statut TEXT DEFAULT 'pending',
+                reference TEXT,
+                date_paiement TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # ---------- CHAPITRES ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS chapitres (
+                id SERIAL PRIMARY KEY,
+                niveau_id INTEGER NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+                numero INTEGER NOT NULL,
+                titre TEXT NOT NULL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(niveau_id, numero)
+            );
+        """)
+
+        # ---------- LECONS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS lecons (
+                id SERIAL PRIMARY KEY,
+                chapitre_id INTEGER NOT NULL REFERENCES chapitres(id) ON DELETE CASCADE,
+                numero INTEGER NOT NULL,
+                titre TEXT NOT NULL,
+                contenu TEXT,
+                duree INTEGER DEFAULT 5,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(chapitre_id, numero)
+            );
+        """)
+
+        # ---------- PROGRESSIONS LECONS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS progressions_lecons (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                lecon_id INTEGER NOT NULL REFERENCES lecons(id) ON DELETE CASCADE,
+                termine INTEGER DEFAULT 0,
+                date_termine TIMESTAMP,
+                UNIQUE(user_id, lecon_id)
+            );
+        """)
+
+        # ---------- EXERCICES ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS exercices (
+                id SERIAL PRIMARY KEY,
+                niveau_id INTEGER NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+                titre TEXT NOT NULL,
+                description TEXT,
+                type TEXT DEFAULT 'texte',
+                langage TEXT,
+                contenu TEXT,
+                reponse_attendue TEXT,
+                qcm_data TEXT,
+                plateforme_url TEXT,
+                corrige_auto INTEGER DEFAULT 0,
+                lecon_id INTEGER,
+                est_evaluation_finale INTEGER DEFAULT 0,
+                partie TEXT DEFAULT 'principal',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # ---------- SOUMISSIONS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS soumissions (
+                id SERIAL PRIMARY KEY,
+                exercice_id INTEGER NOT NULL REFERENCES exercices(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                contenu TEXT,
+                note REAL,
+                commentaire TEXT,
+                note_ia REAL,
+                commentaire_ia TEXT,
+                date_correction_ia TIMESTAMP,
+                details TEXT,
+                statut TEXT DEFAULT 'submitted',
+                date_soumission TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # ---------- PRETESTS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS pretests (
+                id SERIAL PRIMARY KEY,
+                niveau_id INTEGER NOT NULL UNIQUE REFERENCES niveaux(id) ON DELETE CASCADE,
+                titre TEXT NOT NULL,
+                description TEXT,
+                seuil_reussite INTEGER DEFAULT 70,
+                duree_minutes INTEGER DEFAULT 30,
+                qcm_data TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # ---------- SOUMISSIONS PRETEST ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS soumissions_pretest (
+                id SERIAL PRIMARY KEY,
+                pretest_id INTEGER NOT NULL REFERENCES pretests(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                niveau_id INTEGER NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+                reponses TEXT,
+                score INTEGER,
+                reussi INTEGER DEFAULT 0,
+                date_passage TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # ---------- CERTIFICATS ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS certificats (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                niveau_id INTEGER NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+                formation_id INTEGER NOT NULL REFERENCES formations(id) ON DELETE CASCADE,
+                numero_certificat TEXT UNIQUE NOT NULL,
+                score_obtenu REAL NOT NULL,
+                score_total REAL NOT NULL,
+                pourcentage REAL NOT NULL,
+                date_obtention TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, niveau_id)
+            );
+        """)
+
+        # ---------- PROGRESSION ETUDIANT ----------
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS progressions_etudiant (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                formation_id INTEGER NOT NULL REFERENCES formations(id) ON DELETE CASCADE,
+                niveau_actuel_id INTEGER,
+                niveaux_completes TEXT DEFAULT '[]',
+                pourcentage_global INTEGER DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, formation_id)
+            );
+        """)
+
+        conn.commit()
+
+        # ---------- ADMIN PAR DEFAUT ----------
         cur.execute("SELECT id FROM users WHERE email = %s",
                     ("admin@softlearn.com",))
         if not cur.fetchone():
@@ -2570,13 +2761,50 @@ def init_db_secret():
             """, ("Admin", "Soft Learn", "admin@softlearn.com",
                   generate_password_hash("admin123")))
 
+        # ---------- FORMATEUR DEMO ----------
+        cur.execute("SELECT id FROM users WHERE email = %s",
+                    ("trainer@softlearn.com",))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO users(nom, prenom, email, password, role,
+                                  statut_validation, diplome, experience)
+                VALUES (%s, %s, %s, %s, 'trainer', 'approved', %s, %s)
+            """, ("Formateur", "Demo", "trainer@softlearn.com",
+                  generate_password_hash("trainer123"),
+                  "Master en Informatique",
+                  "5 ans d'experience en formation."))
+
         conn.commit()
         cur.close()
         conn.close()
 
-        return "✅ Base initialisee avec succes ! Vous pouvez supprimer cette route."
+        return """
+        <html>
+        <body style="font-family: Arial; padding: 40px; text-align: center;">
+            <h1 style="color: #20a464;">✅ TOUTES les tables creees !</h1>
+            <p>13 tables + admin + formateur.</p>
+            <p><strong>Admin :</strong> admin@softlearn.com / admin123</p>
+            <p><strong>Formateur :</strong> trainer@softlearn.com / trainer123</p>
+            <hr>
+            <p style="color: #d97706;">
+                ⚠️ <strong>IMPORTANT :</strong> Supprimez cette route de <code>app.py</code>
+                puis poussez sur GitHub pour raisons de securite.
+            </p>
+            <p><a href="/">Retour au site</a></p>
+        </body>
+        </html>
+        """
+
     except Exception as e:
-        return f"❌ Erreur : {e}"
+        return f"""
+        <html>
+        <body style="font-family: Arial; padding: 40px;">
+            <h1 style="color: #e74c3c;">❌ Erreur</h1>
+            <pre>{e}</pre>
+        </body>
+        </html>
+        """
+
         
 # =========================================================
 # LANCEMENT
