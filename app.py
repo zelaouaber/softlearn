@@ -2519,7 +2519,65 @@ def download_certificate(niveau_id):
     finally:
         conn.close()
 
+# =========================================================
+# ROUTE TEMPORAIRE : INITIALISER LA BASE (a supprimer apres usage)
+# =========================================================
 
+@app.route("/init-db-secret-xyz-2026")
+def init_db_secret():
+    """Route temporaire pour initialiser la base PostgreSQL sur Render."""
+    import psycopg2
+    from werkzeug.security import generate_password_hash
+
+    if not config.USE_POSTGRES:
+        return "❌ Cette route ne fonctionne qu'avec PostgreSQL."
+
+    try:
+        conn = psycopg2.connect(config.DATABASE_URL)
+        cur = conn.cursor()
+
+        # Executer le schema (copiez le contenu de init_postgres.py ici)
+        # ... (voir ci-dessous pour la version courte)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                nom TEXT NOT NULL,
+                prenom TEXT NOT NULL,
+                telephone TEXT,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL CHECK(role IN ('student', 'trainer', 'admin')),
+                statut_validation TEXT DEFAULT 'approved',
+                diplome TEXT,
+                cv TEXT,
+                diplome_file TEXT,
+                experience TEXT,
+                motif_refus TEXT,
+                date_validation TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        # ... et ainsi de suite pour toutes les tables
+
+        # Creer admin par defaut
+        cur.execute("SELECT id FROM users WHERE email = %s",
+                    ("admin@softlearn.com",))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO users(nom, prenom, email, password, role, statut_validation)
+                VALUES (%s, %s, %s, %s, 'admin', 'approved')
+            """, ("Admin", "Soft Learn", "admin@softlearn.com",
+                  generate_password_hash("admin123")))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return "✅ Base initialisee avec succes ! Vous pouvez supprimer cette route."
+    except Exception as e:
+        return f"❌ Erreur : {e}"
+        
 # =========================================================
 # LANCEMENT
 # =========================================================
