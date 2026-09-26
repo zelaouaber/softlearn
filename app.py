@@ -2805,7 +2805,140 @@ def init_db_secret():
         </html>
         """
 
-        
+
+# =========================================================
+# ROUTE TEMPORAIRE : PEUPLER LA BASE (seed)
+# ⚠️ À SUPPRIMER APRÈS UTILISATION
+# =========================================================
+
+@app.route("/seed-db-secret-xyz-2026")
+def seed_db_secret():
+    """Route temporaire pour inserer les donnees initiales."""
+    import psycopg2
+
+    if not config.USE_POSTGRES:
+        return "❌ Cette route ne fonctionne qu'avec PostgreSQL."
+
+    try:
+        conn = psycopg2.connect(config.DATABASE_URL)
+        cur = conn.cursor()
+
+        # ---------- Recupere le formateur ----------
+        cur.execute("SELECT id FROM users WHERE email = %s",
+                    ("trainer@softlearn.com",))
+        trainer = cur.fetchone()
+        if not trainer:
+            return "❌ Formateur demo introuvable. Lancez /init-db-secret-xyz-2026 d'abord."
+        trainer_id = trainer[0]
+
+        # ---------- Donnees formations ----------
+        formations_data = [
+            {"nom": "Python", "description": "Apprentissage progressif de Python : des fondamentaux jusqu'aux projets IA.", "categorie": "programmation", "plateforme_defaut": "https://colab.research.google.com/",
+             "niveaux": [
+                {"numero": 1, "titre": "Python – Fondamentaux", "description": "Syntaxe, variables, conditions, boucles, fonctions.", "prix": 5000},
+                {"numero": 2, "titre": "Python – Data Analysis", "description": "NumPy, Pandas, Matplotlib, nettoyage et analyse.", "prix": 8000},
+                {"numero": 3, "titre": "Python – Avance & IA", "description": "POO, Machine Learning, Scikit-learn, projets.", "prix": 10000},
+             ]},
+            {"nom": "SPSS", "description": "Analyse statistique avec SPSS.", "categorie": "data", "plateforme_defaut": None,
+             "niveaux": [
+                {"numero": 1, "titre": "SPSS – Initiation", "description": "Interface, donnees, statistiques descriptives.", "prix": 5000},
+                {"numero": 2, "titre": "SPSS – Analyse statistique", "description": "Tests t, Khi2, ANOVA, regression.", "prix": 8000},
+                {"numero": 3, "titre": "SPSS – Analyse avancee", "description": "Multivariee, projet complet.", "prix": 10000},
+             ]},
+            {"nom": "Bureautique", "description": "Word, Excel et PowerPoint jusqu'a l'automatisation VBA.", "categorie": "bureautique", "plateforme_defaut": None,
+             "niveaux": [
+                {"numero": 1, "titre": "Bureautique – Fondamentaux", "description": "Bases Word, Excel, PowerPoint.", "prix": 5000},
+                {"numero": 2, "titre": "Bureautique – Intermediaire", "description": "Excel avance, TCD, formules.", "prix": 8000},
+                {"numero": 3, "titre": "Bureautique – Automatisation", "description": "Macros VBA, dashboards.", "prix": 10000},
+             ]},
+            {"nom": "Intelligence Artificielle", "description": "IA, Machine Learning et Deep Learning.", "categorie": "data", "plateforme_defaut": "https://colab.research.google.com/",
+             "niveaux": [
+                {"numero": 1, "titre": "IA – Fondamentaux", "description": "Concepts IA, ML, premiers modeles.", "prix": 5000},
+                {"numero": 2, "titre": "IA – Machine Learning", "description": "Regression, classification, Random Forest.", "prix": 8000},
+                {"numero": 3, "titre": "IA – Deep Learning", "description": "CNN, Transfer Learning, projets.", "prix": 10000},
+             ]},
+            {"nom": "Developpement Web", "description": "HTML, CSS, JavaScript et Flask.", "categorie": "web", "plateforme_defaut": "https://codepen.io/pen/",
+             "niveaux": [
+                {"numero": 1, "titre": "Web – HTML & CSS", "description": "Structure, CSS, Flexbox, Grid.", "prix": 5000},
+                {"numero": 2, "titre": "Web – JavaScript", "description": "DOM, evenements, validation.", "prix": 8000},
+                {"numero": 3, "titre": "Web – Full Stack Flask", "description": "Flask, BDD, API, CRUD.", "prix": 10000},
+             ]},
+            {"nom": "C++", "description": "Programmation C++ des fondamentaux aux algorithmes.", "categorie": "programmation", "plateforme_defaut": "https://replit.com/languages/cpp",
+             "niveaux": [
+                {"numero": 1, "titre": "C++ – Fondamentaux", "description": "Syntaxe, variables, boucles.", "prix": 5000},
+                {"numero": 2, "titre": "C++ – POO", "description": "Classes, heritage, polymorphisme.", "prix": 8000},
+                {"numero": 3, "titre": "C++ – Algorithmes", "description": "Structures de donnees, pointeurs, STL.", "prix": 10000},
+             ]},
+            {"nom": "Java", "description": "Programmation Java des fondamentaux aux applications.", "categorie": "programmation", "plateforme_defaut": "https://replit.com/languages/java",
+             "niveaux": [
+                {"numero": 1, "titre": "Java – Fondamentaux", "description": "Syntaxe, variables, POO intro.", "prix": 5000},
+                {"numero": 2, "titre": "Java – POO & Collections", "description": "Classes, heritage, collections.", "prix": 8000},
+                {"numero": 3, "titre": "Java – Avance", "description": "JDBC, BDD, Spring.", "prix": 10000},
+             ]},
+            {"nom": "Data Analysis", "description": "Analyse de donnees d'Excel aux dashboards avances.", "categorie": "data", "plateforme_defaut": "https://www.kaggle.com/code",
+             "niveaux": [
+                {"numero": 1, "titre": "Data Analysis – Fondamentaux", "description": "Excel, stats descriptives.", "prix": 5000},
+                {"numero": 2, "titre": "Data Analysis – Python", "description": "NumPy, Pandas, Matplotlib.", "prix": 8000},
+                {"numero": 3, "titre": "Data Analysis – Avance", "description": "Analyse exploratoire, dashboards.", "prix": 10000},
+             ]},
+        ]
+
+        count_formations = 0
+        count_niveaux = 0
+
+        for f in formations_data:
+            cur.execute("SELECT id FROM formations WHERE nom = %s", (f["nom"],))
+            existing = cur.fetchone()
+
+            if existing:
+                fid = existing[0]
+            else:
+                cur.execute("""
+                    INSERT INTO formations(nom, description, categorie, plateforme_defaut, trainer_id)
+                    VALUES (%s, %s, %s, %s, %s) RETURNING id
+                """, (f["nom"], f["description"], f["categorie"],
+                      f["plateforme_defaut"], trainer_id))
+                fid = cur.fetchone()[0]
+                count_formations += 1
+
+            for n in f["niveaux"]:
+                cur.execute("""
+                    SELECT id FROM niveaux WHERE formation_id = %s AND numero = %s
+                """, (fid, n["numero"]))
+                if not cur.fetchone():
+                    cur.execute("""
+                        INSERT INTO niveaux(formation_id, numero, titre, description, prix)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (fid, n["numero"], n["titre"], n["description"], n["prix"]))
+                    count_niveaux += 1
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return f"""
+        <html>
+        <body style="font-family: Arial; padding: 40px; text-align: center;">
+            <h1 style="color: #20a464;">✅ Base peuplee !</h1>
+            <p><strong>{count_formations}</strong> nouvelles formations creees</p>
+            <p><strong>{count_niveaux}</strong> nouveaux niveaux crees</p>
+            <p>Total : 8 formations et 24 niveaux attendus</p>
+            <hr>
+            <p><a href="/dashboard">Aller au dashboard</a></p>
+        </body>
+        </html>
+        """
+
+    except Exception as e:
+        return f"""
+        <html>
+        <body style="font-family: Arial; padding: 40px;">
+            <h1 style="color: #e74c3c;">❌ Erreur</h1>
+            <pre>{e}</pre>
+        </body>
+        </html>
+        """
+                
 # =========================================================
 # LANCEMENT
 # =========================================================
