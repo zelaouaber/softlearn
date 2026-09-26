@@ -6,6 +6,22 @@ from flask import (
     Flask, render_template, request, redirect,
     url_for, session, flash, send_from_directory, make_response
 )
+
+try:
+    import sqlite3
+except ImportError:
+    pass
+
+# Détection de l'erreur d'intégrité selon le SGBD
+try:
+    import psycopg2
+    from psycopg2 import IntegrityError as PgIntegrityError
+    from psycopg2.errors import UniqueViolation
+    DB_INTEGRITY_ERRORS = (sqlite3.IntegrityError, UniqueViolation) if 'sqlite3' in dir() else (UniqueViolation,)
+except ImportError:
+    DB_INTEGRITY_ERRORS = (sqlite3.IntegrityError,)
+
+
 import json
 import uuid
 import markdown
@@ -1303,7 +1319,7 @@ def check_and_create_certificate(conn, user_id, niveau_id):
         )
         return True
 
-    except sqlite3.IntegrityError:
+    except DB_INTEGRITY_ERRORS:
         conn.rollback()
         return False
 
@@ -1363,7 +1379,7 @@ def create_level(formation_id):
         """, (formation_id, numero, titre, description, prix))
         conn.commit()
         flash("Niveau ajouté.", "success")
-    except sqlite3.IntegrityError:
+    except DB_INTEGRITY_ERRORS:
         flash("Ce numéro de niveau existe déjà pour cette formation.", "danger")
     finally:
         conn.close()
@@ -1398,7 +1414,7 @@ def create_chapitre(niveau_id):
         """, (niveau_id, numero, titre, description))
         conn.commit()
         flash("Chapitre créé.", "success")
-    except sqlite3.IntegrityError:
+    except DB_INTEGRITY_ERRORS:
         flash("Ce numéro existe déjà.", "danger")
     finally:
         conn.close()
@@ -1436,7 +1452,7 @@ def create_lecon(chapitre_id):
         """, (chapitre_id, numero, titre, contenu, duree))
         conn.commit()
         flash("Leçon créée.", "success")
-    except sqlite3.IntegrityError:
+    except DB_INTEGRITY_ERRORS:
         flash("Ce numéro de leçon existe déjà.", "danger")
     finally:
         conn.close()
@@ -2938,7 +2954,7 @@ def seed_db_secret():
         </body>
         </html>
         """
-                
+
 # =========================================================
 # LANCEMENT
 # =========================================================
