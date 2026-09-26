@@ -1,0 +1,33 @@
+# Base de donnees locale (ne PAS commit)
+database.db
+*.db
+*.sqlite3
+
+# Environment
+.env
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Uploads (fichiers utilisateurs)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Certificats generes
+static/certificates/*
+!static/certificates/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

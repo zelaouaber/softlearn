@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aperçu — {{ lecon.titre }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<!-- =========================================================
+     HEADER APERCU
+========================================================= -->
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-left">
+            <a href="{{ url_for('dashboard', section='niveaux') }}" class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Retour aux niveaux" data-ar="العودة إلى المستويات">
+                    Retour aux niveaux
+                </span>
+            </a>
+
+            <div class="app-separator"></div>
+
+            <div class="app-crumb">
+                <span class="app-crumb-formation">{{ lecon.formation_nom }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">{{ lecon.chapitre_titre }}</span>
+            </div>
+        </div>
+
+        <div class="app-header-right">
+            <span class="app-tag app-tag-preview"
+                  data-fr="APERÇU FORMATEUR"
+                  data-ar="معاينة المدرب">
+                APERÇU FORMATEUR
+            </span>
+
+            <a href="{{ url_for('edit_lecon', lecon_id=lecon.id) }}"
+               class="app-btn app-btn-primary">
+                ✏️ <span data-fr="Modifier" data-ar="تعديل">Modifier</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- =========================================================
+     CONTENU
+========================================================= -->
+
+<main class="app-main" style="max-width: 900px; margin: 30px auto; padding: 0 25px;">
+
+    <!-- Bandeau info -->
+    <div class="app-preview-banner">
+        <div class="app-preview-icon">👁️</div>
+        <div class="app-preview-content">
+            <strong data-fr="Mode aperçu" data-ar="وضع المعاينة">
+                Mode aperçu
+            </strong>
+            <p data-fr="Vous visualisez cette leçon telle que vos étudiants la voient."
+               data-ar="أنت تعرض هذا الدرس كما يراه طلابك.">
+                Vous visualisez cette leçon telle que vos étudiants la voient.
+            </p>
+        </div>
+    </div>
+
+    <!-- En-tête de la leçon -->
+    <header class="app-lesson-header">
+        <span class="app-lesson-chapter">
+            Chapitre {{ lecon.chapitre_numero }} · {{ lecon.chapitre_titre }}
+        </span>
+        <h1 class="app-lesson-title">{{ lecon.titre }}</h1>
+        <div class="app-lesson-meta">
+            <span class="app-lesson-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                {{ lecon.duree }} min
+            </span>
+            <span class="app-lesson-meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Leçon {{ lecon.numero }}
+            </span>
+        </div>
+    </header>
+
+    <!-- Contenu -->
+    <div class="app-lesson-content">
+        {{ lecon.contenu | markdown }}
+    </div>
+
+    <!-- Navigation -->
+    <nav class="app-lesson-nav">
+        {% if lecon_prec %}
+        <a href="{{ url_for('view_lecon_trainer', lecon_id=lecon_prec.id) }}"
+           class="app-nav-btn app-nav-btn-prev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <div class="app-nav-btn-content">
+                <small data-fr="Précédent" data-ar="السابق">Précédent</small>
+            </div>
+        </a>
+        {% else %}
+        <span></span>
+        {% endif %}
+
+        {% if lecon_suiv %}
+        <a href="{{ url_for('view_lecon_trainer', lecon_id=lecon_suiv.id) }}"
+           class="app-nav-btn app-nav-btn-next">
+            <div class="app-nav-btn-content">
+                <small data-fr="Suivant" data-ar="التالي">Suivant</small>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
+        {% else %}
+        <a href="{{ url_for('dashboard', section='niveaux') }}"
+           class="app-nav-btn app-nav-btn-finish">
+            <div class="app-nav-btn-content">
+                <small data-fr="Retour" data-ar="رجوع">Retour</small>
+            </div>
+        </a>
+        {% endif %}
+    </nav>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

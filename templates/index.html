@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Soft Learn - Plateforme professionnelle de formation en programmation, data et technologies informatiques.">
+    <meta name="keywords"
+          content="Soft Learn, Python, SPSS, IA, Data Analysis, formation, programmation">
+    <meta name="author" content="Soft Learn">
+
+    <title>Soft Learn | Formation en ligne</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="header">
+    <div class="header-container">
+
+        <a href="{{ url_for('index') }}" class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}"
+                 alt="Soft Learn"
+                 class="logo">
+            <div class="logo-text">
+                <strong>Soft Learn</strong>
+                <span data-fr="Apprendre autrement"
+                      data-ar="تعلم بطريقة مختلفة">
+                    Apprendre autrement
+                </span>
+            </div>
+        </a>
+
+        <nav class="navigation">
+            <a href="#accueil"
+               data-fr="Accueil" data-ar="الرئيسية">Accueil</a>
+            <a href="#formations"
+               data-fr="Formations" data-ar="التكوينات">Formations</a>
+            <a href="#fonctionnement"
+               data-fr="Comment ça marche ?" data-ar="كيف يعمل؟">Comment ça marche ?</a>
+            <a href="#inscription"
+               data-fr="Inscription" data-ar="التسجيل">Inscription</a>
+            <a href="#connexion"
+               data-fr="Connexion" data-ar="تسجيل الدخول">Connexion</a>
+        </nav>
+
+        <div class="header-options">
+            <button id="languageBtn" class="option-btn" type="button"
+                    onclick="toggleLanguage()">
+                <span id="languageIcon">🇩🇿</span>
+                <span id="languageText">العربية</span>
+            </button>
+
+            <button id="darkModeBtn" class="option-btn icon-only"
+                    type="button" onclick="toggleDarkMode()">
+                🌙
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- =========================================================
+     FLASH MESSAGES
+========================================================= -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    <span>{{ message }}</span>
+                    <button type="button"
+                            onclick="this.parentElement.remove()">×</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
+<section id="accueil" class="hero">
+    <div class="hero-container">
+
+        <div class="hero-text">
+            <div class="hero-badge">
+                <span>🎓</span>
+                <span data-fr="Plateforme d'apprentissage en ligne"
+                      data-ar="منصة تعليم إلكترونية">
+                    Plateforme d'apprentissage en ligne
+                </span>
+            </div>
+
+            <h1 data-fr="Développez vos compétences avec Soft Learn"
+                data-ar="طوّر مهاراتك مع Soft Learn">
+                Développez vos compétences avec Soft Learn
+            </h1>
+
+            <p data-fr="Une plateforme de formation progressive et pratique pour apprendre la programmation, la data et les technologies informatiques."
+               data-ar="منصة تكوين تدريجية وتطبيقية لتعلم البرمجة والبيانات وتقنيات المعلومات.">
+                Une plateforme de formation progressive et pratique
+                pour apprendre la programmation, la data et les technologies
+                informatiques.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#inscription" class="main-btn"
+                   data-fr="Commencer maintenant" data-ar="ابدأ الآن">
+                    Commencer maintenant
+                </a>
+                <a href="#formations" class="secondary-btn"
+                   data-fr="Découvrir les formations" data-ar="اكتشف التكوينات">
+                    Découvrir les formations
+                </a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <strong>8</strong>
+                    <span data-fr="Formations" data-ar="تكوينات">Formations</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>24</strong>
+                    <span data-fr="Niveaux" data-ar="مستويات">Niveaux</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>100%</strong>
+                    <span data-fr="Progressif" data-ar="تدريجي">Progressif</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="hero-card-main">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}"
+                     alt="Soft Learn">
+            </div>
+
+            <div class="floating-card floating-card-one">
+                <span>🐍</span>
+                <div>
+                    <strong>Python</strong>
+                    <small data-fr="3 niveaux" data-ar="3 مستويات">3 niveaux</small>
+                </div>
+            </div>
+
+            <div class="floating-card floating-card-two">
+                <span>🤖</span>
+                <div>
+                    <strong>IA & Data</strong>
+                    <small data-fr="Apprentissage pratique"
+                           data-ar="تعلم تطبيقي">Apprentissage pratique</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     FORMATIONS
+========================================================= -->
+
+<section id="formations" class="formations-section">
+    <div class="section-title">
+        <span class="section-badge"
+              data-fr="NOS FORMATIONS" data-ar="تكويناتنا">
+            NOS FORMATIONS
+        </span>
+        <h2 data-fr="Choisissez votre parcours"
+            data-ar="اختر مسارك التعليمي">
+            Choisissez votre parcours
+        </h2>
+        <p data-fr="8 formations professionnelles organisées en 3 niveaux progressifs."
+           data-ar="8 تكوينات احترافية منظمة في 3 مستويات تدريجية.">
+            8 formations professionnelles organisées en 3 niveaux progressifs.
+        </p>
+    </div>
+
+    <div class="formation-cards">
+
+        <article class="formation-card">
+            <div class="formation-icon">🐍</div>
+            <h3>Python</h3>
+            <p data-fr="Des fondamentaux aux projets IA."
+               data-ar="من الأساسيات إلى مشاريع الذكاء الاصطناعي.">
+                Des fondamentaux aux projets IA.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Fondamentaux"
+                      data-ar="المستوى 1 · الأساسيات">
+                    Niveau 1 · Fondamentaux
+                </span>
+                <span data-fr="Niveau 2 · Data Analysis"
+                      data-ar="المستوى 2 · تحليل البيانات">
+                    Niveau 2 · Data Analysis
+                </span>
+                <span data-fr="Niveau 3 · Projets IA"
+                      data-ar="المستوى 3 · مشاريع IA">
+                    Niveau 3 · Projets IA
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">📊</div>
+            <h3>SPSS</h3>
+            <p data-fr="Analyse statistique de l'initiation aux analyses avancées."
+               data-ar="تحليل إحصائي من البداية إلى التحليلات المتقدمة.">
+                Analyse statistique de l'initiation aux analyses avancées.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Initiation"
+                      data-ar="المستوى 1 · البداية">
+                    Niveau 1 · Initiation
+                </span>
+                <span data-fr="Niveau 2 · Analyse statistique"
+                      data-ar="المستوى 2 · تحليل إحصائي">
+                    Niveau 2 · Analyse statistique
+                </span>
+                <span data-fr="Niveau 3 · Analyse avancée"
+                      data-ar="المستوى 3 · تحليل متقدم">
+                    Niveau 3 · Analyse avancée
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">💻</div>
+            <h3>Bureautique</h3>
+            <p data-fr="Word, Excel et PowerPoint jusqu'à l'automatisation VBA."
+               data-ar="Word وExcel وPowerPoint حتى الأتمتة VBA.">
+                Word, Excel et PowerPoint jusqu'à l'automatisation VBA.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Fondamentaux"
+                      data-ar="المستوى 1 · الأساسيات">
+                    Niveau 1 · Fondamentaux
+                </span>
+                <span data-fr="Niveau 2 · Intermédiaire"
+                      data-ar="المستوى 2 · متوسط">
+                    Niveau 2 · Intermédiaire
+                </span>
+                <span data-fr="Niveau 3 · Automatisation"
+                      data-ar="المستوى 3 · الأتمتة">
+                    Niveau 3 · Automatisation
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">🤖</div>
+            <h3>Intelligence Artificielle</h3>
+            <p data-fr="IA, Machine Learning et Deep Learning."
+               data-ar="الذكاء الاصطناعي، تعلم الآلة والتعلم العميق.">
+                IA, Machine Learning et Deep Learning.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Fondamentaux"
+                      data-ar="المستوى 1 · الأساسيات">
+                    Niveau 1 · Fondamentaux
+                </span>
+                <span data-fr="Niveau 2 · Machine Learning"
+                      data-ar="المستوى 2 · تعلم الآلة">
+                    Niveau 2 · Machine Learning
+                </span>
+                <span data-fr="Niveau 3 · Deep Learning"
+                      data-ar="المستوى 3 · التعلم العميق">
+                    Niveau 3 · Deep Learning
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">🌐</div>
+            <h3>Développement Web</h3>
+            <p data-fr="HTML, CSS, JavaScript et Flask."
+               data-ar="HTML وCSS وJavaScript وFlask.">
+                HTML, CSS, JavaScript et Flask.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · HTML & CSS"
+                      data-ar="المستوى 1 · HTML وCSS">
+                    Niveau 1 · HTML & CSS
+                </span>
+                <span data-fr="Niveau 2 · JavaScript"
+                      data-ar="المستوى 2 · JavaScript">
+                    Niveau 2 · JavaScript
+                </span>
+                <span data-fr="Niveau 3 · Full Stack Flask"
+                      data-ar="المستوى 3 · Full Stack Flask">
+                    Niveau 3 · Full Stack Flask
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">⚙️</div>
+            <h3>C++</h3>
+            <p data-fr="Des fondamentaux aux algorithmes avancés."
+               data-ar="من الأساسيات إلى الخوارزميات المتقدمة.">
+                Des fondamentaux aux algorithmes avancés.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Fondamentaux"
+                      data-ar="المستوى 1 · الأساسيات">
+                    Niveau 1 · Fondamentaux
+                </span>
+                <span data-fr="Niveau 2 · POO"
+                      data-ar="المستوى 2 · البرمجة الكائنية">
+                    Niveau 2 · POO
+                </span>
+                <span data-fr="Niveau 3 · Algorithmes"
+                      data-ar="المستوى 3 · الخوارزميات">
+                    Niveau 3 · Algorithmes
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">☕</div>
+            <h3>Java</h3>
+            <p data-fr="Des fondamentaux aux applications avancées."
+               data-ar="من الأساسيات إلى التطبيقات المتقدمة.">
+                Des fondamentaux aux applications avancées.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Fondamentaux"
+                      data-ar="المستوى 1 · الأساسيات">
+                    Niveau 1 · Fondamentaux
+                </span>
+                <span data-fr="Niveau 2 · POO & Collections"
+                      data-ar="المستوى 2 · POO والمجموعات">
+                    Niveau 2 · POO & Collections
+                </span>
+                <span data-fr="Niveau 3 · Applications"
+                      data-ar="المستوى 3 · التطبيقات">
+                    Niveau 3 · Applications
+                </span>
+            </div>
+        </article>
+
+        <article class="formation-card">
+            <div class="formation-icon">📈</div>
+            <h3>Data Analysis</h3>
+            <p data-fr="D'Excel aux dashboards avancés."
+               data-ar="من Excel إلى لوحات المعلومات المتقدمة.">
+                D'Excel aux dashboards avancés.
+            </p>
+            <div class="level-list">
+                <span data-fr="Niveau 1 · Fondamentaux"
+                      data-ar="المستوى 1 · الأساسيات">
+                    Niveau 1 · Fondamentaux
+                </span>
+                <span data-fr="Niveau 2 · Python"
+                      data-ar="المستوى 2 · Python">
+                    Niveau 2 · Python
+                </span>
+                <span data-fr="Niveau 3 · Projet avancé"
+                      data-ar="المستوى 3 · مشروع متقدم">
+                    Niveau 3 · Projet avancé
+                </span>
+            </div>
+        </article>
+    </div>
+</section>
+
+<!-- =========================================================
+     NIVEAUX + TARIFS
+========================================================= -->
+
+<section class="levels-section">
+    <div class="section-title">
+        <span class="section-badge"
+              data-fr="APPRENTISSAGE PROGRESSIF"
+              data-ar="تعلم تدريجي">
+            APPRENTISSAGE PROGRESSIF
+        </span>
+        <h2 data-fr="Trois niveaux pour progresser à votre rythme"
+            data-ar="ثلاثة مستويات للتقدم حسب وتيرتك">
+            Trois niveaux pour progresser à votre rythme
+        </h2>
+    </div>
+
+    <div class="levels-container">
+
+        <div class="level-card">
+            <div class="level-number">01</div>
+            <div>
+                <h3 data-fr="Débutant · 5 000 DA"
+                    data-ar="مبتدئ · 5000 دج">
+                    Débutant · 5 000 DA
+                </h3>
+                <p data-fr="Découvrir les bases et acquérir les premières compétences."
+                   data-ar="اكتشاف الأساسيات واكتساب المهارات الأولى.">
+                    Découvrir les bases et acquérir les premières compétences.
+                </p>
+            </div>
+        </div>
+
+        <div class="level-card">
+            <div class="level-number">02</div>
+            <div>
+                <h3 data-fr="Intermédiaire · 8 000 DA"
+                    data-ar="متوسط · 8000 دج">
+                    Intermédiaire · 8 000 DA
+                </h3>
+                <p data-fr="Approfondir les connaissances et réaliser des projets pratiques."
+                   data-ar="تعميق المعارف وإنجاز مشاريع تطبيقية.">
+                    Approfondir les connaissances et réaliser des projets pratiques.
+                </p>
+            </div>
+        </div>
+
+        <div class="level-card">
+            <div class="level-number">03</div>
+            <div>
+                <h3 data-fr="Avancé · 10 000 DA"
+                    data-ar="متقدم · 10000 دج">
+                    Avancé · 10 000 DA
+                </h3>
+                <p data-fr="Développer des compétences avancées à travers des projets et exercices."
+                   data-ar="تطوير مهارات متقدمة من خلال المشاريع والتمارين.">
+                    Développer des compétences avancées à travers des projets et exercices.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="payment-info">
+        <div class="payment-icon">💳</div>
+        <div>
+            <h3 data-fr="Paiement par niveau"
+                data-ar="الدفع حسب المستوى">
+                Paiement par niveau
+            </h3>
+            <p data-fr="Chaque niveau peut être acheté séparément. Le choix de la formation, du niveau et le paiement se font depuis votre dashboard."
+               data-ar="يمكن شراء كل مستوى بشكل مستقل. يتم اختيار التكوين والمستوى والدفع من خلال لوحة التحكم.">
+                Chaque niveau peut être acheté séparément. Le choix de la formation,
+                du niveau et le paiement se font depuis votre dashboard.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     COMMENT ÇA MARCHE
+========================================================= -->
+
+<section id="fonctionnement" class="how-section">
+    <div class="section-title">
+        <span class="section-badge"
+              data-fr="COMMENT ÇA MARCHE ?"
+              data-ar="كيف يعمل؟">
+            COMMENT ÇA MARCHE ?
+        </span>
+        <h2 data-fr="Apprendre simplement, étape par étape"
+            data-ar="تعلم بسهولة خطوة بخطوة">
+            Apprendre simplement, étape par étape
+        </h2>
+    </div>
+
+    <div class="steps-container">
+        <div class="step-card">
+            <div class="step-icon">1</div>
+            <h3 data-fr="Créer un compte" data-ar="إنشاء حساب">
+                Créer un compte
+            </h3>
+            <p data-fr="Inscrivez-vous en tant qu'étudiant ou formateur."
+               data-ar="قم بالتسجيل كطالب أو كمدرب.">
+                Inscrivez-vous en tant qu'étudiant ou formateur.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-icon">2</div>
+            <h3 data-fr="Choisir une formation" data-ar="اختيار التكوين">
+                Choisir une formation
+            </h3>
+            <p data-fr="Parcourez le catalogue et sélectionnez le niveau souhaité."
+               data-ar="تصفح الكتالوج واختر المستوى المطلوب.">
+                Parcourez le catalogue et sélectionnez le niveau souhaité.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-icon">3</div>
+            <h3 data-fr="Effectuer le paiement" data-ar="إتمام الدفع">
+                Effectuer le paiement
+            </h3>
+            <p data-fr="Payez uniquement le niveau auquel vous souhaitez accéder."
+               data-ar="ادفع فقط مقابل المستوى الذي ترغب في الوصول إليه.">
+                Payez uniquement le niveau auquel vous souhaitez accéder.
+            </p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-icon">4</div>
+            <h3 data-fr="Apprendre et progresser"
+                data-ar="تعلم وتقدم">
+                Apprendre et progresser
+            </h3>
+            <p data-fr="Accédez aux cours, exercices et suivez votre progression."
+               data-ar="الوصول إلى الدروس والتمارين ومتابعة تقدمك.">
+                Accédez aux cours, exercices et suivez votre progression.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     AVANTAGES
+========================================================= -->
+
+<section class="advantages-section">
+    <div class="section-title">
+        <span class="section-badge"
+              data-fr="POURQUOI SOFT LEARN ?"
+              data-ar="لماذا Soft Learn؟">
+            POURQUOI SOFT LEARN ?
+        </span>
+        <h2 data-fr="Une plateforme pensée pour apprendre efficacement"
+            data-ar="منصة مصممة للتعلم بفعالية">
+            Une plateforme pensée pour apprendre efficacement
+        </h2>
+    </div>
+
+    <div class="advantages-grid">
+        <div class="advantage-card">
+            <span>📚</span>
+            <h3 data-fr="Cours structurés" data-ar="دروس منظمة">
+                Cours structurés
+            </h3>
+            <p data-fr="Un parcours organisé par niveaux pour faciliter l'apprentissage."
+               data-ar="مسار منظم حسب المستويات لتسهيل التعلم.">
+                Un parcours organisé par niveaux pour faciliter l'apprentissage.
+            </p>
+        </div>
+
+        <div class="advantage-card">
+            <span>💻</span>
+            <h3 data-fr="Apprentissage pratique"
+                data-ar="تعلم تطبيقي">
+                Apprentissage pratique
+            </h3>
+            <p data-fr="Des exercices et activités pour mettre en pratique les connaissances."
+               data-ar="تمارين وأنشطة لتطبيق المعارف المكتسبة.">
+                Des exercices et activités pour mettre en pratique les connaissances.
+            </p>
+        </div>
+
+        <div class="advantage-card">
+            <span>📊</span>
+            <h3 data-fr="Suivi de progression"
+                data-ar="متابعة التقدم">
+                Suivi de progression
+            </h3>
+            <p data-fr="Suivez votre progression et identifiez les compétences à améliorer."
+               data-ar="تابع تقدمك وحدد المهارات التي تحتاج إلى تحسين.">
+                Suivez votre progression et identifiez les compétences à améliorer.
+            </p>
+        </div>
+
+        <div class="advantage-card">
+            <span>👨‍🏫</span>
+            <h3 data-fr="Accompagnement" data-ar="مرافقة">
+                Accompagnement
+            </h3>
+            <p data-fr="Les formateurs peuvent suivre les étudiants et corriger leurs travaux."
+               data-ar="يمكن للمدربين متابعة الطلاب وتصحيح أعمالهم.">
+                Les formateurs peuvent suivre les étudiants et corriger leurs travaux.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     INSCRIPTION + CONNEXION
+========================================================= -->
+
+<section class="auth-section">
+    <div class="auth-container">
+
+        <!-- =============================================
+             INSCRIPTION
+        ============================================== -->
+
+        <div id="inscription" class="auth-card register-card">
+
+            <div class="auth-title">
+                <span class="auth-icon">✨</span>
+                <h2 data-fr="Créer un compte" data-ar="إنشاء حساب">
+                    Créer un compte
+                </h2>
+                <p data-fr="Rejoignez Soft Learn et commencez votre parcours."
+                   data-ar="انضم إلى Soft Learn وابدأ مسارك التعليمي.">
+                    Rejoignez Soft Learn et commencez votre parcours.
+                </p>
+            </div>
+
+            <form action="{{ url_for('register') }}"
+                  method="POST"
+                  class="auth-form"
+                  enctype="multipart/form-data"
+                  onsubmit="return validateRegisterForm();">
+
+                <!-- TYPE DE COMPTE -->
+                <div class="form-group">
+                    <label data-fr="Type de compte"
+                           data-ar="نوع الحساب">
+                        Type de compte
+                    </label>
+
+                    <div class="role-selection">
+                        <label class="role-option">
+                            <input type="radio" name="role"
+                                   value="student" checked>
+                            <span class="role-content">
+                                <span class="role-icon">🎓</span>
+                                <span>
+                                    <strong data-fr="Étudiant"
+                                            data-ar="طالب">
+                                        Étudiant
+                                    </strong>
+                                    <small data-fr="Suivre des formations"
+                                           data-ar="متابعة التكوينات">
+                                        Suivre des formations
+                                    </small>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="role-option">
+                            <input type="radio" name="role"
+                                   value="trainer">
+                            <span class="role-content">
+                                <span class="role-icon">👨‍🏫</span>
+                                <span>
+                                    <strong data-fr="Formateur"
+                                            data-ar="مدرب">
+                                        Formateur
+                                    </strong>
+                                    <small data-fr="Créer et gérer des formations"
+                                           data-ar="إنشاء وإدارة التكوينات">
+                                        Créer et gérer des formations
+                                    </small>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+
+
+                <!-- NOM / PRÉNOM -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nom" data-fr="Nom" data-ar="اللقب">
+                            Nom
+                        </label>
+                        <input id="nom" type="text" name="nom"
+                               placeholder="Votre nom"
+                               data-placeholder-fr="Votre nom"
+                               data-placeholder-ar="اللقب"
+                               autocomplete="family-name"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prenom" data-fr="Prénom"
+                               data-ar="الاسم">
+                            Prénom
+                        </label>
+                        <input id="prenom" type="text" name="prenom"
+                               placeholder="Votre prénom"
+                               data-placeholder-fr="Votre prénom"
+                               data-placeholder-ar="الاسم"
+                               autocomplete="given-name"
+                               required>
+                    </div>
+                </div>
+
+                <!-- TÉLÉPHONE -->
+                <div class="form-group">
+                    <label for="telephone" data-fr="Téléphone"
+                           data-ar="رقم الهاتف">
+                        Téléphone
+                    </label>
+                    <input id="telephone" type="tel" name="telephone"
+                           placeholder="Votre numéro de téléphone"
+                           data-placeholder-fr="Votre numéro de téléphone"
+                           data-placeholder-ar="رقم الهاتف"
+                           autocomplete="tel">
+                </div>
+
+                <!-- EMAIL -->
+                <div class="form-group">
+                    <label for="register-email"
+                           data-fr="Adresse email"
+                           data-ar="البريد الإلكتروني">
+                        Adresse email
+                    </label>
+                    <input id="register-email" type="email" name="email"
+                           placeholder="exemple@email.com"
+                           data-placeholder-fr="exemple@email.com"
+                           data-placeholder-ar="مثال@email.com"
+                           autocomplete="email"
+                           required>
+                </div>
+
+                <!-- MOT DE PASSE -->
+                <div class="form-group">
+                    <label for="register-password"
+                           data-fr="Mot de passe"
+                           data-ar="كلمة المرور">
+                        Mot de passe
+                    </label>
+                    <input id="register-password" type="password"
+                           name="password"
+                           placeholder="Créer un mot de passe"
+                           data-placeholder-fr="Créer un mot de passe"
+                           data-placeholder-ar="أنشئ كلمة مرور"
+                           autocomplete="new-password"
+                           minlength="6"
+                           required>
+                </div>
+
+                <!-- CONFIRMATION -->
+                <div class="form-group">
+                    <label for="confirm-password"
+                           data-fr="Confirmer le mot de passe"
+                           data-ar="تأكيد كلمة المرور">
+                        Confirmer le mot de passe
+                    </label>
+                    <input id="confirm-password" type="password"
+                           name="confirm_password"
+                           placeholder="Confirmer votre mot de passe"
+                           data-placeholder-fr="Confirmer votre mot de passe"
+                           data-placeholder-ar="تأكيد كلمة المرور"
+                           autocomplete="new-password"
+                           minlength="6"
+                           required>
+                </div>
+                <!-- CHAMPS FORMATEUR (cachés par défaut) -->
+                <div id="trainerFields" class="trainer-fields"
+                     style="display:none;">
+
+                    <div class="form-group">
+                        <label for="diplome"
+                               data-fr="Diplôme obtenu"
+                               data-ar="الشهادة المحصلة عليها">
+                            Diplôme obtenu
+                        </label>
+                        <input id="diplome" type="text" name="diplome"
+                               placeholder="Ex : Master en Informatique"
+                               data-placeholder-fr="Ex : Master en Informatique"
+                               data-placeholder-ar="مثال: ماستر في الإعلام الآلي">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experience"
+                               data-fr="Expérience professionnelle"
+                               data-ar="الخبرة المهنية">
+                            Expérience professionnelle
+                        </label>
+                        <textarea id="experience" name="experience" rows="4"
+                                  placeholder="Décrivez vos expériences en formation et dans votre domaine (30 caractères minimum)..."
+                                  data-placeholder-fr="Décrivez vos expériences en formation et dans votre domaine (30 caractères minimum)..."
+                                  data-placeholder-ar="صف خبراتك في التكوين ومجالك (30 حرفاً على الأقل)..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cv"
+                               data-fr="CV (PDF, DOC, DOCX)"
+                               data-ar="السيرة الذاتية (PDF, DOC, DOCX)">
+                            CV (PDF, DOC, DOCX)
+                        </label>
+                        <input id="cv" type="file" name="cv"
+                               accept=".pdf,.doc,.docx">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="diplome_file"
+                               data-fr="Copie du diplôme (PDF, JPG, PNG)"
+                               data-ar="نسخة من الشهادة (PDF, JPG, PNG)">
+                            Copie du diplôme (PDF, JPG, PNG)
+                        </label>
+                        <input id="diplome_file" type="file"
+                               name="diplome_file"
+                               accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+
+                    <div class="info-note">
+                        <span>ℹ️</span>
+                        <p data-fr="Votre dossier sera vérifié par l'administration avant l'activation de votre compte formateur."
+                           data-ar="سيتم التحقق من ملفك من قبل الإدارة قبل تفعيل حساب المدرب الخاص بك.">
+                            Votre dossier sera vérifié par l'administration
+                            avant l'activation de votre compte formateur.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- CONDITIONS -->
+                <label class="terms-checkbox">
+                    <input type="checkbox" name="terms" required>
+                    <span data-fr="J'accepte les conditions d'utilisation de Soft Learn."
+                          data-ar="أوافق على شروط استخدام Soft Learn.">
+                        J'accepte les conditions d'utilisation de Soft Learn.
+                    </span>
+                </label>
+
+                <!-- BOUTON -->
+                <button type="submit" class="auth-btn">
+                    <span data-fr="Créer mon compte"
+                          data-ar="إنشاء حسابي">
+                        Créer mon compte
+                    </span>
+                    <span>→</span>
+                </button>
+
+                <p class="auth-switch">
+                    <span data-fr="Vous avez déjà un compte ?"
+                          data-ar="هل لديك حساب بالفعل؟">
+                        Vous avez déjà un compte ?
+                    </span>
+                    <a href="#connexion"
+                       data-fr="Se connecter"
+                       data-ar="تسجيل الدخول">
+                        Se connecter
+                    </a>
+                </p>
+            </form>
+        </div>
+
+        <!-- =============================================
+             CONNEXION
+        ============================================== -->
+
+        <div id="connexion" class="auth-card login-card">
+
+            <div class="auth-title">
+                <span class="auth-icon">🔐</span>
+                <h2 data-fr="Connexion" data-ar="تسجيل الدخول">
+                    Connexion
+                </h2>
+                <p data-fr="Accédez à votre espace Soft Learn."
+                   data-ar="ادخل إلى فضائك في Soft Learn.">
+                    Accédez à votre espace Soft Learn.
+                </p>
+            </div>
+
+            <form action="{{ url_for('login') }}"
+                  method="POST" class="auth-form">
+
+                <!-- EMAIL -->
+                <div class="form-group">
+                    <label for="login-email"
+                           data-fr="Adresse email"
+                           data-ar="البريد الإلكتروني">
+                        Adresse email
+                    </label>
+                    <input id="login-email" type="email" name="email"
+                           placeholder="Votre adresse email"
+                           data-placeholder-fr="Votre adresse email"
+                           data-placeholder-ar="البريد الإلكتروني"
+                           autocomplete="email"
+                           required>
+                </div>
+
+                <!-- MOT DE PASSE -->
+                <div class="form-group">
+                    <label for="login-password"
+                           data-fr="Mot de passe"
+                           data-ar="كلمة المرور">
+                        Mot de passe
+                    </label>
+                    <input id="login-password" type="password"
+                           name="password"
+                           placeholder="Votre mot de passe"
+                           data-placeholder-fr="Votre mot de passe"
+                           data-placeholder-ar="كلمة المرور"
+                           autocomplete="current-password"
+                           required>
+                </div>
+
+                <!-- MOT DE PASSE OUBLIÉ -->
+                <div class="forgot-password-row">
+                    <a href="{{ url_for('forgot_password') }}"
+                       data-fr="Mot de passe oublié ?"
+                       data-ar="هل نسيت كلمة المرور؟">
+                        Mot de passe oublié ?
+                    </a>
+                </div>
+
+                <!-- SE SOUVENIR -->
+                <div class="remember-row">
+                    <label class="remember">
+                        <input type="checkbox" name="remember">
+                        <span data-fr="Se souvenir de moi"
+                              data-ar="تذكرني">
+                            Se souvenir de moi
+                        </span>
+                    </label>
+                </div>
+
+                <!-- BOUTON -->
+                <button type="submit" class="auth-btn">
+                    <span data-fr="Se connecter"
+                          data-ar="تسجيل الدخول">
+                        Se connecter
+                    </span>
+                    <span>→</span>
+                </button>
+            </form>
+
+            <!-- INFO -->
+            <div class="login-info">
+                <div class="login-info-icon">🎓</div>
+                <div>
+                    <strong data-fr="Votre espace personnel"
+                            data-ar="فضاؤك الشخصي">
+                        Votre espace personnel
+                    </strong>
+                    <p data-fr="Retrouvez vos formations, vos exercices, vos résultats et votre progression."
+                       data-ar="اعثر على تكويناتك وتمارينك ونتائجك وتقدمك.">
+                        Retrouvez vos formations, vos exercices,
+                        vos résultats et votre progression.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================================
+     CTA
+========================================================= -->
+
+<section class="cta-section">
+    <div class="cta-container">
+        <div>
+            <span class="cta-badge">🚀</span>
+            <h2 data-fr="Prêt à commencer votre parcours ?"
+                data-ar="هل أنت مستعد لبدء مسارك؟">
+                Prêt à commencer votre parcours ?
+            </h2>
+            <p data-fr="Créez votre compte et choisissez votre formation."
+               data-ar="أنشئ حسابك واختر تكوينك.">
+                Créez votre compte et choisissez votre formation.
+            </p>
+        </div>
+
+        <a href="#inscription" class="cta-btn"
+           data-fr="Commencer maintenant"
+           data-ar="ابدأ الآن">
+            Commencer maintenant
+        </a>
+    </div>
+</section>
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer class="footer">
+    <div class="footer-container">
+
+        <div class="footer-brand">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}"
+                 alt="Soft Learn">
+            <h3>Soft Learn</h3>
+            <p data-fr="Apprendre. Pratiquer. Progresser."
+               data-ar="تعلم. طبق. تطور.">
+                Apprendre. Pratiquer. Progresser.
+            </p>
+        </div>
+
+        <div class="footer-links">
+            <h3 data-fr="Navigation" data-ar="التنقل">
+                Navigation
+            </h3>
+            <a href="#accueil" data-fr="Accueil"
+               data-ar="الرئيسية">Accueil</a>
+            <a href="#formations" data-fr="Formations"
+               data-ar="التكوينات">Formations</a>
+            <a href="#inscription" data-fr="Inscription"
+               data-ar="التسجيل">Inscription</a>
+            <a href="#connexion" data-fr="Connexion"
+               data-ar="تسجيل الدخول">Connexion</a>
+        </div>
+
+        <div class="footer-links">
+            <h3 data-fr="Formations" data-ar="التكوينات">
+                Formations
+            </h3>
+            <a href="#formations">Python</a>
+            <a href="#formations">SPSS</a>
+            <a href="#formations">Intelligence Artificielle</a>
+            <a href="#formations">Développement Web</a>
+        </div>
+
+        <div class="footer-contact">
+            <h3 data-fr="Contact" data-ar="اتصل بنا">
+                Contact
+            </h3>
+            <p>📧 contact@softlearn.com</p>
+            <p data-fr="Plateforme de formation en ligne"
+               data-ar="منصة تكوين عبر الإنترنت">
+                Plateforme de formation en ligne
+            </p>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p data-fr="© 2026 Soft Learn. Tous droits réservés."
+           data-ar="© 2026 Soft Learn. جميع الحقوق محفوظة.">
+            © 2026 Soft Learn. Tous droits réservés.
+        </p>
+        <p data-fr="Plateforme éducative"
+           data-ar="منصة تعليمية">
+            Plateforme éducative
+        </p>
+    </div>
+</footer>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pré-test — {{ pretest.formation_nom }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-body">
+
+<header class="dashboard-header">
+    <div class="dashboard-header-container">
+        <a class="dashboard-logo" href="{{ url_for('dashboard') }}">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Soft Learn">
+            <div class="dashboard-title">Pré-test — {{ pretest.niveau_titre }}</div>
+        </a>
+        <div class="dashboard-options">
+            <button class="option-btn" type="button" onclick="toggleLanguage()">
+                <span id="languageIcon">🇩🇿</span>
+                <span id="languageText">العربية</span>
+            </button>
+            <button class="option-btn icon-only" id="darkModeBtn"
+                    type="button" onclick="toggleDarkMode()">🌙</button>
+            <a href="{{ url_for('dashboard') }}" class="option-btn">← Retour</a>
+        </div>
+    </div>
+</header>
+
+<main class="pretest-page">
+
+    <div class="pretest-header">
+        <span class="chapitre-label">{{ pretest.formation_nom }}</span>
+        <h1>{{ pretest.titre }}</h1>
+        <p>{{ pretest.description }}</p>
+
+        <div class="pretest-info">
+            <span>🎯 <span data-fr="Seuil de réussite" data-ar="عتبة النجاح">Seuil de réussite</span> : <strong>{{ pretest.seuil_reussite }}%</strong></span>
+            <span>⏱️ <span data-fr="Durée estimée" data-ar="المدة المتوقعة">Durée estimée</span> : {{ pretest.duree_minutes }} min</span>
+        </div>
+    </div>
+
+    {% if passe %}
+        <div class="pretest-result {% if passe.reussi %}success{% else %}danger{% endif %}">
+            <div class="result-icon">{% if passe.reussi %}🎉{% else %}❌{% endif %}</div>
+            <h2>
+                {% if passe.reussi %}
+                    <span data-fr="Félicitations, vous avez réussi !"
+                          data-ar="تهانينا، لقد نجحت!">Félicitations, vous avez réussi !</span>
+                {% else %}
+                    <span data-fr="Pré-test échoué" data-ar="فشل الاختبار القبلي">Pré-test échoué</span>
+                {% endif %}
+            </h2>
+            <p>
+                <span data-fr="Votre score" data-ar="نتيجتك">Votre score</span> :
+                <strong>{{ passe.score }}%</strong>
+                ({% if passe.reussi %}
+                    <span data-fr="réussi" data-ar="ناجح">réussi</span>
+                {% else %}
+                    <span data-fr="échec" data-ar="فشل">échec</span>
+                {% endif %})
+            </p>
+
+            {% if passe.reussi %}
+                <a href="{{ url_for('dashboard') }}" class="dashboard-btn success">
+                    ✅ <span data-fr="Continuer" data-ar="متابعة">Continuer</span>
+                </a>
+            {% else %}
+                <p class="info-note" style="margin-top:20px;">
+                    <span>ℹ️</span>
+                    <span data-fr="Nous vous recommandons de suivre le niveau précédent pour acquérir les bases nécessaires."
+                          data-ar="نوصيك بمتابعة المستوى السابق لاكتساب الأساسيات اللازمة.">
+                        Nous vous recommandons de suivre le niveau précédent
+                        pour acquérir les bases nécessaires.
+                    </span>
+                </p>
+            {% endif %}
+        </div>
+
+    {% else %}
+        {% set qcm = pretest.qcm_data | from_json %}
+        <form method="POST"
+              action="{{ url_for('submit_pretest', niveau_id=niveau_id) }}"
+              class="pretest-form"
+              onsubmit="return validateQcm(this);">
+
+            {% for q in qcm %}
+            <div class="qcm-question">
+                <strong>{{ loop.index }}. {{ q.question }}</strong>
+                <div class="qcm-options">
+                    {% set q_index = loop.index0 %}
+                    {% for opt in q.options %}
+                    <label class="qcm-option">
+                        <input type="radio" name="q_{{ q_index }}"
+                            value="{{ loop.index0 }}" required>
+                        <span>{{ opt }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <button class="dashboard-btn full" type="submit">
+                ✅ <span data-fr="Soumettre le pré-test" data-ar="إرسال الاختبار القبلي">
+                    Soumettre le pré-test
+                </span>
+            </button>
+        </form>
+    {% endif %}
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

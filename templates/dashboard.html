@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soft Learn - Tableau de bord</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="dashboard-body">
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="dashboard-header">
+    <div class="dashboard-header-container">
+
+        <a class="dashboard-logo" href="{{ url_for('dashboard') }}">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Soft Learn">
+            <div class="dashboard-title">
+                {% if role == 'student' %}Espace étudiant
+                {% elif role == 'trainer' %}Espace formateur
+                {% else %}Administration{% endif %}
+            </div>
+        </a>
+
+        <div class="dashboard-options">
+
+            <button class="option-btn" type="button" onclick="toggleLanguage()">
+                <span id="languageIcon">🇩🇿</span>
+                <span id="languageText">العربية</span>
+            </button>
+
+            <button class="option-btn icon-only" id="darkModeBtn"
+                    type="button" onclick="toggleDarkMode()">🌙</button>
+
+            <div class="profile-container">
+                <button class="profile-btn" type="button" onclick="toggleProfileMenu()">
+                    👤 <span class="profile-name">{{ session.get('prenom') }}</span> ▾
+                </button>
+
+                <div id="profileMenu" class="profile-menu">
+                    <a href="#" onclick="showSection('compte'); return false;"
+                       data-fr="👤 Mon compte" data-ar="👤 حسابي">
+                        👤 Mon compte
+                    </a>
+                    <a href="#" onclick="showSection('parametres'); return false;"
+                       data-fr="⚙️ Paramètres" data-ar="⚙️ الإعدادات">
+                        ⚙️ Paramètres
+                    </a>
+
+                    <div class="profile-menu-divider"></div>
+
+                    <button type="button"
+                            class="profile-menu-danger"
+                            onclick="confirmDeleteAccount()"
+                            data-fr="🗑️ Supprimer mon compte"
+                            data-ar="🗑️ حذف حسابي">
+                        🗑️ Supprimer mon compte
+                    </button>
+
+                    <a href="{{ url_for('logout') }}"
+                       data-fr="🚪 Déconnexion" data-ar="🚪 تسجيل الخروج">
+                        🚪 Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- FLASH -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash-message {{ category }}">
+        <span>{{ message }}</span>
+        <button type="button" class="flash-close" aria-label="Fermer">×</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="dashboard-layout">
+
+<aside class="sidebar">
+
+{% if role == 'student' %}
+    <div class="sidebar-title">🎓 Étudiant</div>
+    <nav class="sidebar-menu">
+        <button class="sidebar-link {% if current_section == 'accueil' %}active{% endif %}"
+                onclick="showSection('accueil')">
+            🏠 <span data-fr="Accueil" data-ar="الرئيسية">Accueil</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'catalogue' %}active{% endif %}"
+                onclick="showSection('catalogue')">
+            📚 <span data-fr="Catalogue" data-ar="الكتالوج">Catalogue</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'formations' %}active{% endif %}"
+                onclick="showSection('formations')">
+            🎓 <span data-fr="Mes formations" data-ar="تكويناتي">Mes formations</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'progression' %}active{% endif %}"
+                onclick="showSection('progression')">
+            📊 <span data-fr="Ma progression" data-ar="تقدمي">Ma progression</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'paiements' %}active{% endif %}"
+                onclick="showSection('paiements')">
+            💳 <span data-fr="Mes paiements" data-ar="مدفوعاتي">Mes paiements</span>
+        </button>
+    </nav>
+
+{% elif role == 'trainer' %}
+    <div class="sidebar-title">👨‍🏫 Formateur</div>
+    <nav class="sidebar-menu">
+        <button class="sidebar-link {% if current_section == 'accueil' %}active{% endif %}"
+                onclick="showSection('accueil')">
+            🏠 <span data-fr="Accueil" data-ar="الرئيسية">Accueil</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'mes-formations' %}active{% endif %}"
+                onclick="showSection('mes-formations')">
+            📚 <span data-fr="Mes formations" data-ar="تكويناتي">Mes formations</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'creer-formation' %}active{% endif %}"
+                onclick="showSection('creer-formation')">
+            ➕ <span data-fr="Créer une formation" data-ar="إنشاء تكوين">Créer une formation</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'niveaux' %}active{% endif %}"
+                onclick="showSection('niveaux')">
+            📖 <span data-fr="Cours et exercices" data-ar="الدروس والتمارين">Cours et exercices</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'etudiants' %}active{% endif %}"
+                onclick="showSection('etudiants')">
+            👨‍🎓 <span data-fr="Mes étudiants" data-ar="طلابي">Mes étudiants</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'corrections' %}active{% endif %}"
+                onclick="showSection('corrections')">
+            📥 <span data-fr="Corrections" data-ar="التصحيحات">Corrections</span>
+        </button>
+    </nav>
+
+{% else %}
+    <div class="sidebar-title">🛡️ Administration</div>
+    <nav class="sidebar-menu">
+        <button class="sidebar-link {% if current_section == 'accueil' %}active{% endif %}"
+                onclick="showSection('accueil')">
+            🏠 <span data-fr="Tableau de bord" data-ar="لوحة التحكم">Tableau de bord</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'utilisateurs' %}active{% endif %}"
+                onclick="showSection('utilisateurs')">
+            👥 <span data-fr="Utilisateurs" data-ar="المستخدمون">Utilisateurs</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'formateurs-validation' %}active{% endif %}"
+                onclick="showSection('formateurs-validation')">
+            🎓 <span data-fr="Validation formateurs" data-ar="التحقق من المدربين">Validation formateurs</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'formations-admin' %}active{% endif %}"
+                onclick="showSection('formations-admin')">
+            📚 <span data-fr="Formations" data-ar="التكوينات">Formations</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'paiements-admin' %}active{% endif %}"
+                onclick="showSection('paiements-admin')">
+            💳 <span data-fr="Paiements en attente" data-ar="المدفوعات المعلقة">Paiements en attente</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'paiements-valides' %}active{% endif %}"
+                onclick="showSection('paiements-valides')">
+            ✅ <span data-fr="Paiements validés" data-ar="المدفوعات المؤكدة">Paiements validés</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'paiements-refuses' %}active{% endif %}"
+                onclick="showSection('paiements-refuses')">
+            ❌ <span data-fr="Paiements refusés" data-ar="المدفوعات المرفوضة">Paiements refusés</span>
+        </button>
+        <button class="sidebar-link {% if current_section == 'revenus' %}active{% endif %}"
+                onclick="showSection('revenus')">
+            📊 <span data-fr="Revenus" data-ar="الإيرادات">Revenus</span>
+        </button>
+    </nav>
+{% endif %}
+
+    <div class="sidebar-bottom">
+        <a class="sidebar-logout" href="{{ url_for('logout') }}">
+            🚪 <span data-fr="Déconnexion" data-ar="تسجيل الخروج">Déconnexion</span>
+        </a>
+    </div>
+</aside>
+
+<main class="dashboard-content">
+
+{% if role == 'student' %}
+
+<!-- ==================== ACCUEIL ÉTUDIANT ==================== -->
+<section id="section-accueil" class="dashboard-section {% if current_section == 'accueil' %}active-section{% endif %}">
+    <div class="welcome-card">
+        <div>
+            <small data-fr="Bienvenue sur Soft Learn" data-ar="مرحباً بك في Soft Learn">
+                Bienvenue sur Soft Learn
+            </small>
+            <h1>{{ session.get('prenom') }} 👋</h1>
+            <p data-fr="Choisissez une formation, achetez le niveau souhaité et progressez à votre rythme."
+               data-ar="اختر تكويناً، اشترِ المستوى المطلوب وتقدم حسب وتيرتك.">
+                Choisissez une formation, achetez le niveau souhaité et progressez à votre rythme.
+            </p>
+        </div>
+        <div class="welcome-icon">🎓</div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <span>📚</span>
+            <span data-fr="Niveaux actifs" data-ar="المستويات النشطة">Niveaux actifs</span>
+            <strong>{{ formations|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>💳</span>
+            <span data-fr="Paiements" data-ar="المدفوعات">Paiements</span>
+            <strong>{{ paiements|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>🎯</span>
+            <span data-fr="Progression moyenne" data-ar="متوسط التقدم">Progression moyenne</span>
+            <strong>
+                {% if formations %}
+                    {{ (formations|map(attribute='progression')|sum / formations|length)|round|int }}%
+                {% else %}0%{% endif %}
+            </strong>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== CATALOGUE ==================== -->
+<section id="section-catalogue" class="dashboard-section {% if current_section == 'catalogue' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📚 Catalogue des formations" data-ar="📚 كتالوج التكوينات">
+            📚 Catalogue des formations
+        </h2>
+        <p data-fr="Chaque formation est organisée en 3 niveaux progressifs."
+           data-ar="كل تكوين منظم في 3 مستويات تدريجية.">
+            Chaque formation est organisée en 3 niveaux progressifs.
+        </p>
+    </div>
+
+    {% for f in catalogue %}
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h3>📘 {{ f.nom }}</h3>
+                <p>{{ f.description }}</p>
+            </div>
+            <span class="level-badge">{{ f.nb_niveaux }} niveaux</span>
+        </div>
+
+        <div class="catalogue-grid" style="margin-top:15px;">
+        {% for item in niveaux_data if item.niveau.formation_id == f.id %}
+            {% set n = item.niveau %}
+            {% set insc = item.inscription %}
+            {% set pretest = item.pretest %}
+            {% set pretest_reussi = item.pretest_reussi %}
+            {% set pending = item.paiement_en_attente %}
+            {% set peut = item.peut_acheter %}
+
+            <div class="catalogue-card {% if not peut and not insc %}niveau-verrouille{% endif %}">
+
+                {% if not peut and not insc %}
+                    <div class="lock-icon">🔒</div>
+                {% endif %}
+
+                <div class="level-number">N°{{ n.numero }}</div>
+                <h4>{{ n.titre }}</h4>
+                <p>{{ n.description }}</p>
+
+                <div class="level-item">
+                    <span data-fr="Prix" data-ar="السعر">Prix</span>
+                    <span class="price">{{ n.prix }} DA</span>
+                </div>
+
+                {% if insc %}
+                    {% if insc.statut == 'completed' %}
+                        <button class="dashboard-btn success full" disabled>
+                            ✅ <span data-fr="Terminé" data-ar="مكتمل">Terminé</span>
+                        </button>
+                        <a href="{{ url_for('level_detail', niveau_id=n.id) }}"
+                           class="dashboard-btn full"
+                           style="margin-top:8px;">
+                            📖 <span data-fr="Revoir le niveau" data-ar="مراجعة المستوى">Revoir le niveau</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('level_detail', niveau_id=n.id) }}"
+                           class="dashboard-btn full">
+                            ▶️ <span data-fr="Continuer" data-ar="متابعة">Continuer</span>
+                        </a>
+                    {% endif %}
+
+                {% elif pending %}
+                    <button class="dashboard-btn warning full" disabled>
+                        ⏳ <span data-fr="En attente de validation" data-ar="في انتظار المصادقة">
+                            En attente de validation
+                        </span>
+                    </button>
+
+                {% elif peut %}
+                    <form method="POST" action="{{ url_for('buy_level', niveau_id=n.id) }}">
+                        <button class="dashboard-btn full" type="submit">
+                            💳 <span data-fr="Acheter ce niveau" data-ar="شراء هذا المستوى">
+                                Acheter ce niveau
+                            </span>
+                        </button>
+                    </form>
+
+                {% else %}
+                    <div class="raison-verrou">🔒 {{ item.raison }}</div>
+
+                    {% if pretest %}
+                        {% if pretest_reussi %}
+                            <div class="status-badge success" style="margin-bottom:8px;">
+                                ✅ <span data-fr="Pré-test réussi" data-ar="الاختبار القبلي ناجح">
+                                    Pré-test réussi
+                                </span>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('view_pretest', niveau_id=n.id) }}"
+                               class="dashboard-btn warning full">
+                                🔓 <span data-fr="Tester mes prérequis" data-ar="اختبار المتطلبات">
+                                    Tester mes prérequis
+                                </span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3 data-fr="Aucune formation disponible" data-ar="لا يوجد تكوين متاح">
+            Aucune formation disponible
+        </h3>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- ==================== MES FORMATIONS ==================== -->
+<section id="section-formations" class="dashboard-section {% if current_section == 'formations' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="🎓 Mes formations" data-ar="🎓 تكويناتي">🎓 Mes formations</h2>
+    </div>
+
+    {% for n in formations %}
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h3>{{ n.formation_nom }} — {{ n.titre }}</h3>
+                <p>Niveau {{ n.numero }}</p>
+            </div>
+            <span class="level-badge">{{ n.statut }}</span>
+        </div>
+
+        {% set progression = n.progression|default(0)|int %}
+        <div class="progress-info">
+            <span data-fr="Progression" data-ar="التقدم">Progression</span>
+            <span>{{ progression }}%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-value" style="width: {{ progression }}%;"></div>
+        </div>
+
+        <a href="{{ url_for('level_detail', niveau_id=n.niveau_id) }}"
+           class="dashboard-btn"
+           style="margin-top:15px;">
+            📖 <span data-fr="Accéder au niveau" data-ar="الدخول إلى المستوى">
+                Accéder au niveau
+            </span>
+        </a>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🎓</div>
+        <h3 data-fr="Aucun niveau activé" data-ar="لا يوجد مستوى مُفعّل">
+            Aucun niveau activé
+        </h3>
+        <button class="dashboard-btn" onclick="showSection('catalogue')"
+                style="margin-top:15px;">
+            📚 <span data-fr="Voir le catalogue" data-ar="عرض الكتالوج">
+                Voir le catalogue
+            </span>
+        </button>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- ==================== PROGRESSION ==================== -->
+<section id="section-progression" class="dashboard-section {% if current_section == 'progression' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📊 Ma progression" data-ar="📊 تقدمي">📊 Ma progression</h2>
+    </div>
+
+    {% for n in formations %}
+    {% set progression = n.progression|default(0)|int %}
+    <div class="dashboard-card">
+        <div class="progress-info">
+            <strong>{{ n.formation_nom }} — {{ n.titre }}</strong>
+            <span>{{ progression }}%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-value" style="width: {{ progression }}%"></div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3 data-fr="Aucune progression à afficher" data-ar="لا يوجد تقدم لعرضه">
+            Aucune progression à afficher
+        </h3>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- ==================== PAIEMENTS ÉTUDIANT ==================== -->
+<section id="section-paiements" class="dashboard-section {% if current_section == 'paiements' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="💳 Mes paiements" data-ar="💳 مدفوعاتي">
+            💳 Mes paiements
+        </h2>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th data-fr="Formation" data-ar="التكوين">Formation</th>
+                    <th data-fr="Niveau" data-ar="المستوى">Niveau</th>
+                    <th data-fr="Montant" data-ar="المبلغ">Montant</th>
+                    <th data-fr="Statut" data-ar="الحالة">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in paiements %}
+                <tr>
+                    <td>{{ p.formation_nom }}</td>
+                    <td>{{ p.numero }} — {{ p.titre }}</td>
+                    <td>{{ p.montant }} DA</td>
+                    <td>
+                        {% if p.statut == 'paid' %}
+                            <span class="status-badge success">✅ Payé</span>
+                        {% elif p.statut == 'pending' %}
+                            <span class="status-badge warning">⏳ En attente</span>
+                        {% elif p.statut == 'rejected' %}
+                            <span class="status-badge danger">❌ Refusé</span>
+                        {% else %}
+                            {{ p.statut }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="4" style="text-align:center;">
+                    <span data-fr="Aucun paiement" data-ar="لا يوجد دفع">
+                        Aucun paiement
+                    </span>
+                </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% elif role == 'trainer' %}
+
+<!-- ==================== ACCUEIL FORMATEUR ==================== -->
+<section id="section-accueil" class="dashboard-section {% if current_section == 'accueil' %}active-section{% endif %}">
+    <div class="welcome-card">
+        <div>
+            <small data-fr="Bienvenue dans votre espace formateur" data-ar="مرحباً بك في فضاء المدرب">
+                Bienvenue dans votre espace formateur
+            </small>
+            <h1>{{ session.get('prenom') }} 👨‍🏫</h1>
+            <p data-fr="Créez vos formations, gérez les niveaux, chapitres et exercices."
+               data-ar="أنشئ تكويناتك، أدر المستويات والفصول والتمارين.">
+                Créez vos formations, gérez les niveaux, chapitres et exercices.
+            </p>
+        </div>
+        <div class="welcome-icon">👨‍🏫</div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <span>📚</span>
+            <span data-fr="Formations" data-ar="التكوينات">Formations</span>
+            <strong>{{ my_formations|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>👨‍🎓</span>
+            <span data-fr="Étudiants" data-ar="الطلاب">Étudiants</span>
+            <strong>{{ students|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>📥</span>
+            <span data-fr="À corriger" data-ar="للتصحيح">À corriger</span>
+            <strong>{{ submissions|selectattr('statut','equalto','submitted')|list|length }}</strong>
+        </div>
+    </div>
+</section>
+
+<!-- MES FORMATIONS -->
+<section id="section-mes-formations" class="dashboard-section {% if current_section == 'mes-formations' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📚 Mes formations" data-ar="📚 تكويناتي">
+            📚 Mes formations
+        </h2>
+    </div>
+
+    {% for f in my_formations %}
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h3>{{ f.nom }}</h3>
+                <p>{{ f.description }}</p>
+            </div>
+            <span class="level-badge">{{ f.nb_niveaux }} niveaux</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <h3 data-fr="Aucune formation créée" data-ar="لم يتم إنشاء أي تكوين">
+            Aucune formation créée
+        </h3>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- CRÉER FORMATION -->
+<section id="section-creer-formation" class="dashboard-section {% if current_section == 'creer-formation' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="➕ Créer une formation" data-ar="➕ إنشاء تكوين">
+            ➕ Créer une formation
+        </h2>
+    </div>
+
+    <form class="dashboard-form" method="post"
+          action="{{ url_for('create_formation') }}">
+        <div class="form-group">
+            <label data-fr="Nom de la formation" data-ar="اسم التكوين">
+                Nom de la formation
+            </label>
+            <input name="nom" required>
+        </div>
+
+        <div class="form-group">
+            <label data-fr="Description" data-ar="الوصف">Description</label>
+            <textarea name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label data-fr="Catégorie" data-ar="الفئة">Catégorie</label>
+            <select name="categorie">
+                <option value="programmation">Programmation</option>
+                <option value="bureautique">Bureautique</option>
+                <option value="data">Data / IA</option>
+                <option value="web">Web</option>
+            </select>
+        </div>
+
+        <button class="dashboard-btn" type="submit">
+            🎉 <span data-fr="Créer la formation" data-ar="إنشاء التكوين">
+                Créer la formation
+            </span>
+        </button>
+    </form>
+</section>
+
+<!-- ==================== NIVEAUX + COURS + EXERCICES ==================== -->
+<section id="section-niveaux" class="dashboard-section {% if current_section == 'niveaux' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📖 Gérer les niveaux et cours" data-ar="📖 إدارة المستويات والدروس">
+            📖 Gérer les niveaux et cours
+        </h2>
+        <p data-fr="Ajoutez des niveaux, créez des chapitres, leçons, exercices et pré-tests."
+           data-ar="أضف مستويات، أنشئ فصولاً ودروساً وتمارين واختبارات قبلية.">
+            Ajoutez des niveaux, créez des chapitres, leçons, exercices et pré-tests.
+        </p>
+    </div>
+
+    {% for item in formations_avec_cours %}
+    <div class="dashboard-card">
+        <h3>📘 {{ item.formation.nom }}</h3>
+
+        <details style="margin:15px 0;">
+            <summary style="cursor:pointer; font-weight:600; color:var(--primary); padding:8px 0;">
+                ➕ <span data-fr="Ajouter un nouveau niveau" data-ar="إضافة مستوى جديد">
+                    Ajouter un nouveau niveau
+                </span>
+            </summary>
+            <form class="inline-form" method="post"
+                  action="{{ url_for('create_level', formation_id=item.formation.id) }}"
+                  style="margin-top:15px;">
+                <input type="number" name="numero" min="1" placeholder="N°" required>
+                <input name="titre" placeholder="Titre du niveau" required>
+                <input name="prix" type="number" min="0" step="500" placeholder="Prix DA" required>
+                <input name="description" placeholder="Description">
+                <button class="dashboard-btn" type="submit">Ajouter</button>
+            </form>
+        </details>
+
+        {% for niv in item.niveaux %}
+        <div class="niveau-block">
+            <div class="niveau-header">
+                <div>
+                    <strong>Niveau {{ niv.niveau.numero }} — {{ niv.niveau.titre }}</strong>
+                    <span class="level-badge">{{ niv.niveau.prix }} DA</span>
+                </div>
+            </div>
+
+            <details>
+                <summary style="cursor:pointer; font-size:13px; color:var(--primary); padding:8px 0;">
+                    ➕ <span data-fr="Ajouter un chapitre" data-ar="إضافة فصل">
+                        Ajouter un chapitre
+                    </span>
+                </summary>
+                <form class="inline-form" method="post"
+                      action="{{ url_for('create_chapitre', niveau_id=niv.niveau.id) }}"
+                      style="margin:10px 0;">
+                    <input type="number" name="numero" min="1" placeholder="N°" required>
+                    <input name="titre" placeholder="Titre du chapitre" required>
+                    <input name="description" placeholder="Description">
+                    <button class="dashboard-btn" type="submit">Ajouter</button>
+                </form>
+            </details>
+
+            {% for chap_item in niv.chapitres %}
+            <div class="chapitre-block">
+                <div class="chapitre-header">
+                    <strong>
+                        📖 Chapitre {{ chap_item.chapitre.numero }} —
+                        {{ chap_item.chapitre.titre }}
+                    </strong>
+                    <form method="POST"
+                          action="{{ url_for('delete_chapitre', chapitre_id=chap_item.chapitre.id) }}"
+                          onsubmit="return confirmDelete('Supprimer ce chapitre ?');">
+                        <button type="submit" class="dashboard-btn danger small">🗑️</button>
+                    </form>
+                </div>
+
+                <details>
+                    <summary style="cursor:pointer; font-size:13px; color:var(--primary); padding:8px 0;">
+                        ➕ <span data-fr="Ajouter une leçon" data-ar="إضافة درس">
+                            Ajouter une leçon
+                        </span>
+                    </summary>
+                    <form class="dashboard-form" method="post"
+                          action="{{ url_for('create_lecon', chapitre_id=chap_item.chapitre.id) }}"
+                          style="margin:10px 0;">
+                        <div class="form-row">
+                            <input type="number" name="numero" min="1" placeholder="N° leçon" required>
+                            <input type="number" name="duree" min="1" placeholder="Durée (min)" value="5">
+                        </div>
+                        <input name="titre" placeholder="Titre de la leçon" required>
+                        <textarea name="contenu" rows="6" required placeholder="Contenu de la leçon (texte)..."></textarea>
+                        <button class="dashboard-btn" type="submit">
+                            💾 <span data-fr="Enregistrer la leçon" data-ar="حفظ الدرس">
+                                Enregistrer la leçon
+                            </span>
+                        </button>
+                    </form>
+                </details>
+
+                {% if chap_item.lecons %}
+                <ul class="lecons-admin-liste">
+                    {% for l in chap_item.lecons %}
+                    <li>
+                        <span class="lecon-num">{{ l.numero }}</span>
+                        <span class="lecon-titre-admin">{{ l.titre }}</span>
+                        <span class="lecon-duree-admin">{{ l.duree }} min</span>
+
+                        <div class="lecon-actions">
+                            <a href="{{ url_for('view_lecon_trainer', lecon_id=l.id) }}"
+                               class="dashboard-btn ghost small" title="Voir la leçon">👁️</a>
+
+                            <a href="{{ url_for('edit_lecon', lecon_id=l.id) }}"
+                               class="dashboard-btn primary small" title="Modifier la leçon">✏️</a>
+
+                            <form method="POST"
+                                  action="{{ url_for('delete_lecon', lecon_id=l.id) }}"
+                                  onsubmit="return confirmDelete('Supprimer cette leçon ?');"
+                                  style="display:inline;">
+                                <button type="submit" class="dashboard-btn danger small"
+                                        title="Supprimer la leçon">🗑️</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <details style="margin-top:15px;">
+                <summary style="cursor:pointer; font-size:13px; color:var(--primary); padding:8px 0;">
+                    ➕ <span data-fr="Ajouter un exercice" data-ar="إضافة تمرين">
+                        Ajouter un exercice
+                    </span>
+                </summary>
+                <form class="dashboard-form" method="post"
+                      action="{{ url_for('create_exercise_v2', niveau_id=niv.niveau.id) }}"
+                      style="margin:10px 0;">
+                    <div class="form-group">
+                        <label data-fr="Titre" data-ar="العنوان">Titre</label>
+                        <input name="titre" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Description" data-ar="الوصف">Description</label>
+                        <textarea name="description" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Type d'exercice" data-ar="نوع التمرين">Type d'exercice</label>
+                        <select name="type">
+                            <option value="texte">✍️ Réponse libre</option>
+                            <option value="code">💻 Code</option>
+                            <option value="qcm">🔘 QCM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Langage (optionnel)" data-ar="اللغة (اختياري)">Langage (optionnel)</label>
+                        <input name="langage" placeholder="python, cpp, java, html...">
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Instructions" data-ar="التعليمات">Instructions</label>
+                        <textarea name="contenu" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Réponse attendue (pour l'IA)" data-ar="الإجابة المتوقعة (للذكاء الاصطناعي)">
+                            Réponse attendue (pour l'IA)
+                        </label>
+                        <textarea name="reponse_attendue" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="URL de plateforme (optionnel)" data-ar="رابط المنصة (اختياري)">
+                            URL de plateforme (optionnel)
+                        </label>
+                        <input name="plateforme_url" placeholder="https://colab.research.google.com/">
+                    </div>
+                    <button class="dashboard-btn" type="submit">
+                        💾 <span data-fr="Créer l'exercice" data-ar="إنشاء التمرين">
+                            Créer l'exercice
+                        </span>
+                    </button>
+                </form>
+            </details>
+
+            {% if niv.exercices %}
+            <div style="margin-top:15px;">
+                <strong style="font-size:13px;">
+                    💻 <span data-fr="Exercices existants" data-ar="التمارين الحالية">
+                        Exercices existants
+                    </span> ({{ niv.exercices|length }})
+                </strong>
+                <ul class="lecons-admin-liste" style="margin-top:8px;">
+                    {% for ex in niv.exercices %}
+                    <li>
+                        <span class="lecon-num">
+                            {% if ex.type == 'qcm' %}🔘
+                            {% elif ex.type == 'code' %}💻
+                            {% else %}✍️{% endif %}
+                        </span>
+                        <span class="lecon-titre-admin">
+                            {{ ex.titre }}
+                            {% if ex.est_evaluation_finale %}
+                                <span class="app-tag app-tag-final"
+                                      style="font-size:9px; margin-left:5px; padding:2px 8px;">
+                                    CERTIFICATION
+                                </span>
+                            {% endif %}
+                        </span>
+                        <span class="lecon-duree-admin">{{ ex.type }}</span>
+
+                        <div class="lecon-actions">
+                            <a href="{{ url_for('view_exercise_trainer', exercice_id=ex.id) }}"
+                               class="dashboard-btn ghost small"
+                               title="Voir l'exercice">👁️</a>
+
+                            <a href="{{ url_for('edit_exercise', exercice_id=ex.id) }}"
+                               class="dashboard-btn primary small"
+                               title="Modifier l'exercice">✏️</a>
+
+                            <form method="POST"
+                                  action="{{ url_for('delete_exercise', exercice_id=ex.id) }}"
+                                  onsubmit="return confirmDelete('Supprimer cet exercice ? Toutes les soumissions liées seront aussi supprimées.');"
+                                  style="display:inline;">
+                                <button type="submit"
+                                        class="dashboard-btn danger small"
+                                        title="Supprimer l'exercice">🗑️</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <details style="margin-top:15px;">
+                <summary style="cursor:pointer; font-size:13px; color:var(--secondary); padding:8px 0;">
+                    🎯 <span data-fr="Ajouter / modifier un pré-test" data-ar="إضافة/تعديل اختبار قبلي">
+                        Ajouter / modifier un pré-test
+                    </span>
+                </summary>
+                <form class="dashboard-form" method="post"
+                      action="{{ url_for('create_pretest', niveau_id=niv.niveau.id) }}"
+                      style="margin:10px 0;">
+                    <div class="form-group">
+                        <label data-fr="Titre du pré-test" data-ar="عنوان الاختبار القبلي">Titre du pré-test</label>
+                        <input name="titre" value="Pré-test {{ niv.niveau.titre }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Description" data-ar="الوصف">Description</label>
+                        <textarea name="description" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-fr="Seuil de réussite (%)" data-ar="عتبة النجاح (%)">Seuil de réussite (%)</label>
+                        <input type="number" name="seuil" min="30" max="100" value="70">
+                    </div>
+                    <div id="questionsContainer"></div>
+                    <button type="button" class="dashboard-btn secondary" onclick="addQuestion()">
+                        ➕ <span data-fr="Ajouter une question" data-ar="إضافة سؤال">
+                            Ajouter une question
+                        </span>
+                    </button>
+                    <button class="dashboard-btn" type="submit" style="margin-top:10px;">
+                        💾 <span data-fr="Enregistrer le pré-test" data-ar="حفظ الاختبار القبلي">
+                            Enregistrer le pré-test
+                        </span>
+                    </button>
+                </form>
+            </details>
+
+            {% if niv.pretest %}
+            <div class="pretest-configured-card">
+                <div class="pretest-info">
+                    <strong>✅ <span data-fr="Pré-test configuré"
+                                      data-ar="الاختبار القبلي معد">
+                        Pré-test configuré
+                    </span></strong>
+                    <span class="pretest-seuil">
+                        Seuil : {{ niv.pretest.seuil_reussite }}%
+                    </span>
+                </div>
+
+                <div class="pretest-actions">
+                    <a href="{{ url_for('view_pretest_trainer', niveau_id=niv.niveau.id) }}"
+                       class="dashboard-btn ghost small"
+                       title="Voir le pré-test">👁️</a>
+
+                    <a href="{{ url_for('edit_pretest', niveau_id=niv.niveau.id) }}"
+                       class="dashboard-btn primary small"
+                       title="Modifier le pré-test">✏️</a>
+
+                    <form method="POST"
+                          action="{{ url_for('delete_pretest', niveau_id=niv.niveau.id) }}"
+                          onsubmit="return confirmDelete('Supprimer ce pré-test ?');"
+                          style="display:inline;">
+                        <button type="submit"
+                                class="dashboard-btn danger small"
+                                title="Supprimer le pré-test">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📖</div>
+        <h3 data-fr="Créez d'abord une formation" data-ar="أنشئ تكويناً أولاً">
+            Créez d'abord une formation
+        </h3>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- ÉTUDIANTS -->
+<section id="section-etudiants" class="dashboard-section {% if current_section == 'etudiants' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="👨‍🎓 Mes étudiants" data-ar="👨‍🎓 طلابي">
+            👨‍🎓 Mes étudiants
+        </h2>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>E-mail</th>
+                    <th>Formation</th>
+                    <th>Niveau</th>
+                    <th>Progression</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for s in students %}
+                <tr>
+                    <td>{{ s.prenom }} {{ s.nom }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.formation_nom }}</td>
+                    <td>N°{{ s.niveau_numero }} — {{ s.niveau_titre }}</td>
+                    <td>
+                        <div class="progress-bar" style="margin:0; min-width:100px;">
+                            <div class="progress-value" style="width: {{ s.progression }}%;"></div>
+                        </div>
+                        <small>{{ s.progression }}%</small>
+                    </td>
+                    <td>
+                        {% if s.statut == 'completed' %}
+                            <span class="status-badge success">✅ Terminé</span>
+                        {% elif s.statut == 'active' %}
+                            <span class="status-badge warning">⏳ En cours</span>
+                        {% else %}
+                            <span class="status-badge">{{ s.statut }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" style="text-align:center;">
+                    <span data-fr="Aucun étudiant inscrit" data-ar="لا يوجد طلاب مسجلون">
+                        Aucun étudiant inscrit
+                    </span>
+                </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- CORRECTIONS + IA -->
+<section id="section-corrections" class="dashboard-section {% if current_section == 'corrections' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📥 Corrections des exercices" data-ar="📥 تصحيح التمارين">
+            📥 Corrections des exercices
+        </h2>
+    </div>
+
+    {% for s in submissions %}
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h3>{{ s.exercice_titre }} — {{ s.prenom }} {{ s.nom }}</h3>
+                <p>Type : {{ s.type }} | Statut : {{ s.statut }}</p>
+            </div>
+        </div>
+
+        <div style="padding:15px; background:var(--bg); border-radius:8px; margin-bottom:15px;">
+            <strong>📝 <span data-fr="Réponse de l'étudiant" data-ar="إجابة الطالب">Réponse de l'étudiant</span> :</strong>
+            <pre style="white-space:pre-wrap; font-family:inherit; margin-top:8px;">{{ s.contenu }}</pre>
+        </div>
+
+        {% if s.note_ia %}
+        <div style="padding:15px; background:rgba(240,165,0,0.1); border-left:4px solid var(--warning); border-radius:8px; margin-bottom:15px;">
+            <strong>🤖 <span data-fr="Pré-correction IA" data-ar="التصحيح المسبق بالذكاء الاصطناعي">
+                Pré-correction IA
+            </span> : {{ s.note_ia }}/20</strong>
+            <p style="margin-top:8px;">{{ s.commentaire_ia }}</p>
+        </div>
+        {% endif %}
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            {% if not s.note_ia %}
+            <form method="POST" action="{{ url_for('ai_correct_submission', submission_id=s.id) }}">
+                <button class="dashboard-btn warning" type="submit">
+                    🤖 <span data-fr="Pré-corriger avec IA" data-ar="تصحيح مسبق بالذكاء الاصطناعي">
+                        Pré-corriger avec IA
+                    </span>
+                </button>
+            </form>
+            {% endif %}
+
+            {% if s.statut != 'graded' %}
+            <form class="inline-form" method="post"
+                  action="{{ url_for('grade_submission', submission_id=s.id) }}">
+                <input type="number" name="note" min="0" max="20" step="0.5"
+                       placeholder="Note /20" value="{{ s.note_ia or '' }}" required>
+                <input name="commentaire" placeholder="Commentaire final"
+                       value="{{ s.commentaire_ia or '' }}">
+                <button class="dashboard-btn success" type="submit">
+                    ✅ <span data-fr="Valider la note" data-ar="تأكيد العلامة">Valider la note</span>
+                </button>
+            </form>
+            {% else %}
+            <div class="status-badge success">
+                ✅ <span data-fr="Corrigé" data-ar="مصحح">Corrigé</span> : {{ s.note }}/20
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📥</div>
+        <h3 data-fr="Aucune soumission" data-ar="لا يوجد تسليم">Aucune soumission</h3>
+    </div>
+    {% endfor %}
+</section>
+
+{% else %}
+
+<!-- ==================== ADMIN ACCUEIL ==================== -->
+<section id="section-accueil" class="dashboard-section {% if current_section == 'accueil' %}active-section{% endif %}">
+    <div class="welcome-card">
+        <div>
+            <small data-fr="Administration Soft Learn" data-ar="إدارة Soft Learn">
+                Administration Soft Learn
+            </small>
+            <h1>{{ session.get('prenom') }} 🛡️</h1>
+            <p data-fr="Gérez les utilisateurs, les formations et les paiements."
+               data-ar="أدر المستخدمين والتكوينات والمدفوعات.">
+                Gérez les utilisateurs, les formations et les paiements.
+            </p>
+        </div>
+        <div class="welcome-icon">🛡️</div>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <span>👥</span>
+            <span data-fr="Utilisateurs" data-ar="المستخدمون">Utilisateurs</span>
+            <strong>{{ users|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>📚</span>
+            <span data-fr="Formations" data-ar="التكوينات">Formations</span>
+            <strong>{{ formations|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>⏳</span>
+            <span data-fr="En attente" data-ar="قيد الانتظار">En attente</span>
+            <strong>{{ pending_payments|length }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>✅</span>
+            <span data-fr="Payés" data-ar="مدفوع">Payés</span>
+            <strong>{{ paid_payments|length }}</strong>
+        </div>
+    </div>
+
+    <div class="revenue-card">
+        <div class="revenue-main">
+            <span class="revenue-label" data-fr="💰 Revenus totaux" data-ar="💰 إجمالي الإيرادات">
+                💰 Revenus totaux
+            </span>
+            <strong class="revenue-total">{{ total_revenue }} DA</strong>
+            <small data-fr="Basé sur les paiements validés" data-ar="محسوب على المدفوعات المؤكدة">
+                Basé sur les paiements validés
+            </small>
+        </div>
+        <div class="revenue-month">
+            <span class="revenue-label" data-fr="📅 Ce mois-ci" data-ar="📅 هذا الشهر">
+                📅 Ce mois-ci
+            </span>
+            <strong>{{ monthly_revenue }} DA</strong>
+        </div>
+    </div>
+
+    {% if pending_trainers and pending_trainers|length > 0 %}
+    <div class="alert-card" onclick="showSection('formateurs-validation')" style="cursor:pointer;">
+        <div class="alert-icon">🔔</div>
+        <div>
+            <strong>
+                {{ pending_trainers|length }}
+                <span data-fr="formateur(s) en attente" data-ar="مدرب(ين) في الانتظار">
+                    formateur(s) en attente
+                </span>
+            </strong>
+            <p data-fr="Cliquez pour consulter les dossiers." data-ar="انقر لعرض الملفات.">
+                Cliquez pour consulter les dossiers.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- UTILISATEURS -->
+<section id="section-utilisateurs" class="dashboard-section {% if current_section == 'utilisateurs' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="👥 Utilisateurs" data-ar="👥 المستخدمون">👥 Utilisateurs</h2>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>E-mail</th>
+                    <th>Rôle</th>
+                    <th>Statut</th>
+                    <th>Téléphone</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+                <tr>
+                    <td>{{ u.prenom }} {{ u.nom }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.role }}</td>
+                    <td>
+                        {% if u.statut_validation == 'approved' %}✅
+                        {% elif u.statut_validation == 'pending' %}⏳
+                        {% else %}❌{% endif %}
+                        {{ u.statut_validation }}
+                    </td>
+                    <td>{{ u.telephone or '-' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- VALIDATION FORMATEURS -->
+<section id="section-formateurs-validation" class="dashboard-section {% if current_section == 'formateurs-validation' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="🎓 Validation des formateurs" data-ar="🎓 التحقق من المدربين">
+            🎓 Validation des formateurs
+        </h2>
+    </div>
+
+    <h3 style="margin:20px 0 15px;">
+        ⏳ <span data-fr="En attente" data-ar="قيد الانتظار">En attente</span>
+        ({{ pending_trainers|length }})
+    </h3>
+
+    {% for t in pending_trainers %}
+    <div class="trainer-card">
+        <div class="trainer-header">
+            <div class="trainer-avatar">👨‍🏫</div>
+            <div>
+                <h3>{{ t.prenom }} {{ t.nom }}</h3>
+                <p>📧 {{ t.email }}</p>
+                <p>📞 {{ t.telephone or '-' }}</p>
+                <p>📅 {{ t.created_at[:10] }}</p>
+            </div>
+        </div>
+
+        <div class="trainer-info">
+            <div class="info-block">
+                <strong>🎓 <span data-fr="Diplôme" data-ar="الشهادة">Diplôme</span></strong>
+                <p>{{ t.diplome or '-' }}</p>
+            </div>
+            <div class="info-block">
+                <strong>💼 <span data-fr="Expérience" data-ar="الخبرة">Expérience</span></strong>
+                <p>{{ t.experience or '-' }}</p>
+            </div>
+            <div class="info-block">
+                <strong>📄 <span data-fr="Documents" data-ar="المستندات">Documents</span></strong>
+                <div class="documents">
+                    {% if t.cv %}
+                    <a href="{{ url_for('download_file', filename=t.cv) }}" target="_blank" class="doc-link">📄 CV</a>
+                    {% endif %}
+                    {% if t.diplome_file %}
+                    <a href="{{ url_for('download_file', filename=t.diplome_file) }}" target="_blank" class="doc-link">
+                        🎓 <span data-fr="Diplôme" data-ar="الشهادة">Diplôme</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="trainer-actions">
+            <form method="POST" action="{{ url_for('approve_trainer', trainer_id=t.id) }}">
+                <button class="dashboard-btn success" type="submit">
+                    ✅ <span data-fr="Approuver" data-ar="الموافقة">Approuver</span>
+                </button>
+            </form>
+            <button class="dashboard-btn danger" type="button" onclick="openRejectModal({{ t.id }})">
+                ❌ <span data-fr="Refuser" data-ar="رفض">Refuser</span>
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">✅</div>
+        <h3 data-fr="Aucun formateur en attente" data-ar="لا يوجد مدربون في الانتظار">
+            Aucun formateur en attente
+        </h3>
+    </div>
+    {% endfor %}
+
+    <h3 style="margin:40px 0 15px;">
+        📋 <span data-fr="Historique" data-ar="السجل">Historique</span>
+    </h3>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Formateur</th>
+                    <th>E-mail</th>
+                    <th>Statut</th>
+                    <th>Motif</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for t in all_trainers %}
+                {% if t.statut_validation != 'pending' %}
+                <tr>
+                    <td>{{ t.prenom }} {{ t.nom }}</td>
+                    <td>{{ t.email }}</td>
+                    <td>
+                        {% if t.statut_validation == 'approved' %}
+                            <span class="status-badge success">✅ Approuvé</span>
+                        {% else %}
+                            <span class="status-badge danger">❌ Refusé</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ t.motif_refus or '-' }}</td>
+                    <td>{{ (t.date_validation or '')[:10] }}</td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- FORMATIONS ADMIN -->
+<section id="section-formations-admin" class="dashboard-section {% if current_section == 'formations-admin' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📚 Formations" data-ar="📚 التكوينات">📚 Formations</h2>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Formation</th>
+                    <th>Catégorie</th>
+                    <th>Formateur</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for f in formations %}
+                <tr>
+                    <td>{{ f.nom }}</td>
+                    <td>{{ f.categorie }}</td>
+                    <td>{{ (f.trainer_prenom or '') ~ ' ' ~ (f.trainer_nom or '') }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- PAIEMENTS EN ATTENTE -->
+<section id="section-paiements-admin" class="dashboard-section {% if current_section == 'paiements-admin' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="💳 Paiements en attente" data-ar="💳 المدفوعات المعلقة">
+            💳 Paiements en attente
+        </h2>
+    </div>
+
+    {% for p in pending_payments %}
+    <div class="dashboard-card">
+        <h3>{{ p.prenom }} {{ p.nom }} — {{ p.formation_nom }}</h3>
+        <p>Niveau {{ p.numero }} — {{ p.titre }} | {{ p.montant }} DA</p>
+        <div style="display:flex; gap:10px;">
+            <form method="post" action="{{ url_for('admin_payment', payment_id=p.id, action='approve') }}">
+                <button class="dashboard-btn success" type="submit">
+                    ✅ <span data-fr="Valider" data-ar="مصادقة">Valider</span>
+                </button>
+            </form>
+            <form method="post" action="{{ url_for('admin_payment', payment_id=p.id, action='reject') }}">
+                <button class="dashboard-btn danger" type="submit">
+                    ❌ <span data-fr="Refuser" data-ar="رفض">Refuser</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">💳</div>
+        <h3 data-fr="Aucun paiement en attente" data-ar="لا توجد مدفوعات معلقة">
+            Aucun paiement en attente
+        </h3>
+    </div>
+    {% endfor %}
+</section>
+
+<!-- PAIEMENTS VALIDÉS -->
+<section id="section-paiements-valides" class="dashboard-section {% if current_section == 'paiements-valides' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="✅ Paiements validés" data-ar="✅ المدفوعات المؤكدة">
+            ✅ Paiements validés
+        </h2>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Étudiant</th>
+                    <th>E-mail</th>
+                    <th>Formation</th>
+                    <th>Niveau</th>
+                    <th>Montant</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in paid_payments %}
+                <tr>
+                    <td>{{ p.prenom }} {{ p.nom }}</td>
+                    <td>{{ p.email }}</td>
+                    <td>{{ p.formation_nom }}</td>
+                    <td>{{ p.numero }} — {{ p.titre }}</td>
+                    <td><strong style="color:var(--success);">{{ p.montant }} DA</strong></td>
+                    <td>{{ p.date_paiement[:10] }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" style="text-align:center;">
+                    <span data-fr="Aucun paiement validé" data-ar="لا توجد مدفوعات مؤكدة">
+                        Aucun paiement validé
+                    </span>
+                </td></tr>
+            {% endfor %}
+            </tbody>
+            {% if paid_payments %}
+            <tfoot>
+                <tr style="background:rgba(32,164,100,0.08); font-weight:700;">
+                    <td colspan="4" style="text-align:right;">
+                        <span data-fr="Total" data-ar="المجموع">Total</span>
+                    </td>
+                    <td colspan="2">
+                        <strong style="color:var(--success);">{{ total_revenue }} DA</strong>
+                    </td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</section>
+
+<!-- PAIEMENTS REFUSÉS -->
+<section id="section-paiements-refuses" class="dashboard-section {% if current_section == 'paiements-refuses' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="❌ Paiements refusés" data-ar="❌ المدفوعات المرفوضة">
+            ❌ Paiements refusés
+        </h2>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Étudiant</th>
+                    <th>Formation</th>
+                    <th>Niveau</th>
+                    <th>Montant</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in rejected_payments %}
+                <tr>
+                    <td>{{ p.prenom }} {{ p.nom }}</td>
+                    <td>{{ p.formation_nom }}</td>
+                    <td>{{ p.numero }} — {{ p.titre }}</td>
+                    <td>{{ p.montant }} DA</td>
+                    <td>{{ p.date_paiement[:10] }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" style="text-align:center;">
+                    <span data-fr="Aucun paiement refusé" data-ar="لا توجد مدفوعات مرفوضة">
+                        Aucun paiement refusé
+                    </span>
+                </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- REVENUS -->
+<section id="section-revenus" class="dashboard-section {% if current_section == 'revenus' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="📊 Revenus par formation" data-ar="📊 الإيرادات حسب التكوين">
+            📊 Revenus par formation
+        </h2>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <span>✅</span>
+            <span data-fr="Paiements validés" data-ar="مدفوعات مؤكدة">Paiements validés</span>
+            <strong>{{ stats_paiements.paid or 0 }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>⏳</span>
+            <span data-fr="En attente" data-ar="قيد الانتظار">En attente</span>
+            <strong>{{ stats_paiements.pending or 0 }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>❌</span>
+            <span data-fr="Refusés" data-ar="مرفوضة">Refusés</span>
+            <strong>{{ stats_paiements.rejected or 0 }}</strong>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Formation</th>
+                    <th>Paiements validés</th>
+                    <th>Revenus</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for r in revenue_by_formation %}
+                <tr>
+                    <td><strong>{{ r.formation_nom }}</strong></td>
+                    <td>{{ r.nb_paiements }}</td>
+                    <td><strong style="color:var(--success);">{{ r.total }} DA</strong></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3" style="text-align:center;">
+                    <span data-fr="Aucun revenu enregistré" data-ar="لا توجد إيرادات مسجلة">
+                        Aucun revenu enregistré
+                    </span>
+                </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- MODAL REFUS FORMATEUR -->
+<div id="rejectTrainerModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-icon">⚠️</div>
+        <h2 data-fr="Refuser ce formateur" data-ar="رفض هذا المدرب">
+            Refuser ce formateur
+        </h2>
+        <p data-fr="Indiquez le motif du refus." data-ar="حدد سبب الرفض.">
+            Indiquez le motif du refus.
+        </p>
+        <form method="POST" id="rejectTrainerForm" class="modal-form">
+            <div class="form-group">
+                <label data-fr="Motif du refus" data-ar="سبب الرفض">
+                    Motif du refus
+                </label>
+                <textarea name="motif_refus" rows="3" required></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="dashboard-btn secondary" onclick="closeRejectModal()">
+                    Annuler
+                </button>
+                <button type="submit" class="dashboard-btn danger">
+                    Confirmer le refus
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endif %}
+
+<!-- MON COMPTE (tous les rôles) -->
+<section id="section-compte" class="dashboard-section {% if current_section == 'compte' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="👤 Mon compte" data-ar="👤 حسابي">👤 Mon compte</h2>
+    </div>
+
+    <div class="dashboard-card">
+        <h3 data-fr="Informations personnelles" data-ar="المعلومات الشخصية">
+            Informations personnelles
+        </h3>
+        <p><strong>Nom :</strong> {{ session.get('nom') }}</p>
+        <p><strong>Prénom :</strong> {{ session.get('prenom') }}</p>
+        <p><strong>E-mail :</strong> {{ session.get('email') }}</p>
+        <p><strong>Téléphone :</strong> {{ session.get('telephone') or '-' }}</p>
+        <p><strong>Rôle :</strong> {{ session.get('role') }}</p>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h3 data-fr="🔑 Modifier mon mot de passe" data-ar="🔑 تغيير كلمة المرور">
+                    🔑 Modifier mon mot de passe
+                </h3>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('change_password') }}" class="dashboard-form">
+            <div class="form-group">
+                <label data-fr="Mot de passe actuel" data-ar="كلمة المرور الحالية">
+                    Mot de passe actuel
+                </label>
+                <input type="password" name="current_password" required>
+            </div>
+            <div class="form-group">
+                <label data-fr="Nouveau mot de passe" data-ar="كلمة المرور الجديدة">
+                    Nouveau mot de passe
+                </label>
+                <input type="password" name="new_password" minlength="6" required>
+            </div>
+            <div class="form-group">
+                <label data-fr="Confirmer le nouveau mot de passe" data-ar="تأكيد كلمة المرور الجديدة">
+                    Confirmer le nouveau mot de passe
+                </label>
+                <input type="password" name="confirm_password" minlength="6" required>
+            </div>
+            <button class="dashboard-btn" type="submit">
+                <span data-fr="Modifier le mot de passe" data-ar="تغيير كلمة المرور">
+                    Modifier le mot de passe
+                </span>
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- PARAMÈTRES -->
+<section id="section-parametres" class="dashboard-section {% if current_section == 'parametres' %}active-section{% endif %}">
+    <div class="content-title">
+        <h2 data-fr="⚙️ Paramètres" data-ar="⚙️ الإعدادات">⚙️ Paramètres</h2>
+    </div>
+    <div class="dashboard-card">
+        <p data-fr="Les paramètres de langue et de mode sombre sont disponibles dans l'en-tête."
+           data-ar="إعدادات اللغة والوضع الداكن متاحة في الشريط العلوي.">
+            Les paramètres de langue et de mode sombre sont disponibles dans l'en-tête.
+        </p>
+    </div>
+</section>
+
+</main>
+</div>
+
+<!-- MODAL SUPPRESSION COMPTE -->
+<div id="deleteAccountModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-icon">⚠️</div>
+        <h2 data-fr="Supprimer mon compte" data-ar="حذف حسابي">
+            Supprimer mon compte
+        </h2>
+        <p data-fr="Cette action est IRRÉVERSIBLE." data-ar="هذا الإجراء لا رجعة فيه.">
+            Cette action est <strong>IRRÉVERSIBLE</strong>.
+        </p>
+        <form method="POST" action="{{ url_for('delete_account') }}" class="modal-form">
+            <div class="form-group">
+                <label data-fr="Confirmez avec votre mot de passe" data-ar="أكد بكلمة المرور">
+                    Confirmez avec votre mot de passe
+                </label>
+                <input type="password" name="confirm_delete_password" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="dashboard-btn secondary" onclick="closeDeleteModal()">
+                    Annuler
+                </button>
+                <button type="submit" class="dashboard-btn danger">
+                    Supprimer définitivement
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

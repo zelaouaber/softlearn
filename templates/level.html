@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ niveau.formation_nom }} — {{ niveau.titre }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-left">
+            <a href="{{ url_for('dashboard') }}" class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Tableau de bord" data-ar="لوحة التحكم">Tableau de bord</span>
+            </a>
+            <div class="app-separator"></div>
+            <div class="app-crumb">
+                <span class="app-crumb-formation">{{ niveau.formation_nom }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">Niveau {{ niveau.numero }}</span>
+            </div>
+        </div>
+        <div class="app-header-right">
+            <button class="app-icon-btn" type="button" onclick="toggleLanguage()">
+                <span id="languageIcon">🌐</span>
+                <span id="languageText" class="app-icon-label">FR</span>
+            </button>
+            <button class="app-icon-btn" id="darkModeBtn" type="button" onclick="toggleDarkMode()">
+                🌙
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="app-layout">
+
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="app-sidebar">
+        <div class="app-sidebar-hero">
+            <div class="app-sidebar-badge">Niveau {{ niveau.numero }}</div>
+            <h2 class="app-sidebar-title">{{ niveau.titre }}</h2>
+            <p class="app-sidebar-desc">{{ niveau.description }}</p>
+
+            <div class="app-sidebar-progress">
+                <div class="app-sidebar-progress-header">
+                    <span data-fr="Progression" data-ar="التقدم">Progression</span>
+                    <strong>{{ progression }}%</strong>
+                </div>
+                <div class="app-progress-bar">
+                    <div class="app-progress-fill" style="width: {{ progression }}%;"></div>
+                </div>
+                <div class="app-sidebar-progress-meta">
+                    {{ lecons_terminees }} / {{ total_lecons }}
+                    <span data-fr="leçons" data-ar="دروس">leçons</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="app-nav">
+            <div class="app-nav-label">
+                <span data-fr="Contenu du cours" data-ar="محتوى الدورة">Contenu du cours</span>
+            </div>
+
+            {% for item in chapitres %}
+            <div class="app-nav-chapter">
+                <div class="app-nav-chapter-title">
+                    <span class="app-nav-chapter-num">{{ item.chapitre.numero }}</span>
+                    <span>{{ item.chapitre.titre }}</span>
+                </div>
+                <ul class="app-nav-lessons">
+                    {% for lecon in item.lecons %}
+                    <li>
+                        <a href="{{ url_for('view_lecon', lecon_id=lecon.id) }}"
+                           class="app-nav-lesson {% if lecon.termine %}is-done{% endif %}">
+                            <span class="app-nav-lesson-status">
+                                {% if lecon.termine %}
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                {% else %}
+                                    <span class="app-nav-dot"></span>
+                                {% endif %}
+                            </span>
+                            <span class="app-nav-lesson-title">{{ lecon.numero }}. {{ lecon.titre }}</span>
+                            <span class="app-nav-lesson-time">{{ lecon.duree }}m</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% else %}
+            <div class="app-empty-sidebar">
+                <span data-fr="Aucun chapitre" data-ar="لا يوجد فصل">Aucun chapitre</span>
+            </div>
+            {% endfor %}
+        </nav>
+    </aside>
+
+    <!-- ==================== CONTENU PRINCIPAL ==================== -->
+    <main class="app-main">
+
+        <div class="app-level-header">
+            <h1>{{ niveau.formation_nom }}</h1>
+            <p>{{ niveau.titre }}</p>
+        </div>
+
+        {% set exercices_normaux = exercices|rejectattr('est_evaluation_finale')|list %}
+        {% set evaluation_qcm = exercices|selectattr('est_evaluation_finale')|selectattr('partie', 'equalto', 'qcm')|list %}
+        {% set evaluation_code = exercices|selectattr('est_evaluation_finale')|selectattr('partie', 'equalto', 'code')|list %}
+
+        {# exs_non_faits vient du serveur (app.py) #}
+        {% set exs_non_faits_count = exs_non_faits|length if exs_non_faits else 0 %}
+
+        <!-- ==================== EXERCICES NORMAUX ==================== -->
+        <section class="app-section">
+            <div class="app-section-header">
+                <h2 data-fr="Exercices du niveau" data-ar="تمارين المستوى">
+                    Exercices du niveau
+                </h2>
+                <span class="app-section-count">{{ exercices_normaux|length }}</span>
+            </div>
+
+            {% for ex in exercices_normaux %}
+            <article class="app-exercise">
+                <header class="app-exercise-header">
+                    <div class="app-exercise-title-row">
+                        <span class="app-exercise-type">
+                            {% if ex.type == 'qcm' %}
+                                <span class="app-tag app-tag-qcm">QCM</span>
+                            {% elif ex.type == 'code' %}
+                                <span class="app-tag app-tag-code">CODE</span>
+                            {% else %}
+                                <span class="app-tag app-tag-text">TEXTE</span>
+                            {% endif %}
+                        </span>
+                        <h3>{{ ex.titre }}</h3>
+                    </div>
+
+                    {% if ex.soumission_statut == 'graded' %}
+                        <div class="app-score app-score-done"><span>{{ ex.note }}/20</span></div>
+                    {% elif ex.soumission_statut == 'ai_corrected' %}
+                        <div class="app-score app-score-pending">
+                            <span>{{ ex.note_ia }}/20</span><small>IA</small>
+                        </div>
+                    {% elif ex.soumission_statut == 'submitted' %}
+                        <div class="app-score app-score-await">
+                            <span data-fr="En attente" data-ar="قيد الانتظار">En attente</span>
+                        </div>
+                    {% endif %}
+                </header>
+
+                <p class="app-exercise-desc">{{ ex.description }}</p>
+
+                {% if ex.contenu and not ex.soumission_id %}
+                <div class="app-instructions">
+                    <div class="app-instructions-label">
+                        <span data-fr="Instructions" data-ar="التعليمات">Instructions</span>
+                    </div>
+                    <p>{{ ex.contenu }}</p>
+                </div>
+                {% endif %}
+
+                {% if not ex.soumission_id %}
+
+                    {% set plateforme = ex.plateforme_url or niveau.plateforme_defaut %}
+                    {% if plateforme and ex.type == 'code' %}
+                    <div class="app-platform">
+                        <div class="app-platform-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                        </div>
+                        <div class="app-platform-info">
+                            <strong data-fr="Pratiquer en ligne" data-ar="تدرب عبر الإنترنت">
+                                Pratiquer en ligne
+                            </strong>
+                            <small>
+                                {% if 'colab' in plateforme %}Google Colab — Python
+                                {% elif 'replit' in plateforme %}Replit — Editeur en ligne
+                                {% elif 'codepen' in plateforme %}CodePen — HTML/CSS/JS
+                                {% elif 'kaggle' in plateforme %}Kaggle — Data Science
+                                {% else %}{{ plateforme }}{% endif %}
+                            </small>
+                        </div>
+                        <a href="{{ plateforme }}" target="_blank" rel="noopener" class="app-platform-btn">
+                            <span data-fr="Ouvrir" data-ar="فتح">Ouvrir</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="7" y1="17" x2="17" y2="7"/>
+                                <polyline points="7 7 17 7 17 17"/>
+                            </svg>
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if ex.type == 'qcm' %}
+                        {% set qcm = ex.qcm_data | from_json %}
+                        <form method="POST"
+                              action="{{ url_for('submit_exercise', exercice_id=ex.id) }}"
+                              class="app-qcm"
+                              onsubmit="return validateQcm(this);">
+                            {% for q in qcm %}
+                            {% set q_index = loop.index0 %}
+                            <div class="app-qcm-question">
+                                <div class="app-qcm-question-title">
+                                    <span class="app-qcm-num">{{ loop.index }}</span>
+                                    <span>{{ q.question }}</span>
+                                </div>
+                                <div class="app-qcm-options">
+                                    {% for opt in q.options %}
+                                    <label class="app-qcm-option">
+                                        <input type="radio" name="q_{{ q_index }}"
+                                               value="{{ loop.index0 }}" required>
+                                        <span class="app-qcm-radio"></span>
+                                        <span class="app-qcm-text">{{ opt }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="app-btn app-btn-primary">
+                                <span data-fr="Valider mes réponses" data-ar="تأكيد إجاباتي">
+                                    Valider mes réponses
+                                </span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="POST"
+                              action="{{ url_for('submit_exercise', exercice_id=ex.id) }}"
+                              class="app-form">
+                            <textarea name="contenu" rows="6" required class="app-textarea"
+                                      placeholder="Écrivez votre réponse ici..."
+                                      data-placeholder-fr="Écrivez votre réponse ici..."
+                                      data-placeholder-ar="اكتب إجابتك هنا..."></textarea>
+                            <button type="submit" class="app-btn app-btn-primary">
+                                <span data-fr="Envoyer ma réponse" data-ar="إرسال إجابتي">
+                                    Envoyer ma réponse
+                                </span>
+                            </button>
+                        </form>
+                    {% endif %}
+
+                {% else %}
+                    {# ========== DEJA SOUMIS : RESULTATS DETAILLES ========== #}
+                    {% if ex.type == 'qcm' and ex.soumission_details %}
+                        {% set details = ex.soumission_details | from_json %}
+                        <div class="app-qcm-results">
+                            <div class="app-qcm-results-header">
+                                <strong>
+                                    <span data-fr="Résultats détaillés"
+                                          data-ar="النتائج المفصلة">
+                                        Résultats détaillés
+                                    </span>
+                                </strong>
+                                <span class="app-qcm-results-score">{{ ex.note }}/20</span>
+                            </div>
+                            {% for d in details %}
+                            <div class="app-qcm-result-item {% if d.correcte %}correct{% else %}wrong{% endif %}">
+                                <div class="app-qcm-result-icon">
+                                    {% if d.correcte %}✓{% else %}✗{% endif %}
+                                </div>
+                                <div class="app-qcm-result-content">
+                                    <strong>{{ loop.index }}. {{ d.question }}</strong>
+                                    <div class="app-qcm-result-options">
+                                        {% for opt in d.options %}
+                                        {% set opt_index = loop.index0 %}
+                                        <div class="app-qcm-result-option
+                                                    {% if opt_index == d.bonne_reponse %}is-correct{% endif %}
+                                                    {% if opt_index == d.votre_reponse and not d.correcte %}is-wrong{% endif %}">
+                                            <span class="app-qcm-result-letter">
+                                                {{ ['A','B','C','D'][opt_index] }}
+                                            </span>
+                                            <span>{{ opt }}</span>
+                                            {% if opt_index == d.bonne_reponse %}
+                                                <span class="app-qcm-result-tag correct">Bonne réponse</span>
+                                            {% endif %}
+                                            {% if opt_index == d.votre_reponse and not d.correcte %}
+                                                <span class="app-qcm-result-tag wrong">Votre réponse</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="app-submitted">
+                            <div class="app-submitted-label">
+                                <span data-fr="Votre réponse" data-ar="إجابتك">Votre réponse</span>
+                            </div>
+                            <pre class="app-submitted-content">{{ ex.soumission_contenu or '' }}</pre>
+
+                            {% if ex.note %}
+                            <div class="app-submitted-score">
+                                <span data-fr="Note finale" data-ar="العلامة النهائية">
+                                    Note finale
+                                </span>
+                                <strong>{{ ex.note }}/20</strong>
+                            </div>
+                            {% elif ex.note_ia %}
+                            <div class="app-submitted-ai">
+                                <span data-fr="Pré-correction IA" data-ar="التصحيح المسبق">
+                                    Pré-correction IA
+                                </span>
+                                <strong>{{ ex.note_ia }}/20</strong>
+                                <small>En attente de validation par le formateur</small>
+                            </div>
+                            {% endif %}
+
+                            {% if ex.soumission_commentaire %}
+                            <div class="app-feedback">
+                                <div class="app-feedback-label">
+                                    💬 <span data-fr="Commentaire du formateur"
+                                              data-ar="تعليق المدرب">
+                                        Commentaire du formateur
+                                    </span>
+                                </div>
+                                <p>{{ ex.soumission_commentaire }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if ex.soumission_commentaire_ia and not ex.soumission_commentaire %}
+                            <div class="app-feedback app-feedback-ia">
+                                <div class="app-feedback-label">
+                                    🤖 <span data-fr="Feedback IA" data-ar="تعليق الذكاء الاصطناعي">
+                                        Feedback IA
+                                    </span>
+                                </div>
+                                <p>{{ ex.soumission_commentaire_ia }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </article>
+            {% else %}
+            <div class="app-empty">
+                <div class="app-empty-icon">📝</div>
+                <p>Aucun exercice pour ce niveau</p>
+            </div>
+            {% endfor %}
+        </section>
+
+        <!-- ==================== CERTIFICATION ==================== -->
+        {% if evaluation_qcm or evaluation_code %}
+        <section class="app-section app-section-final" id="certification">
+            <div class="app-cert-header">
+                <div class="app-cert-icon">🎓</div>
+                <div class="app-cert-content">
+                    <span class="app-cert-badge">CERTIFICATION FINALE</span>
+                    <h2 data-fr="Evaluation et Certification" data-ar="التقييم والشهادة">
+                        Evaluation et Certification
+                    </h2>
+                    <p>
+                        Passez l'évaluation finale pour obtenir votre certificat Soft Learn.
+                        <strong>Seuil de réussite : 90%</strong>
+                    </p>
+                </div>
+                <div class="app-cert-total">
+                    <strong>40</strong>
+                    <span data-fr="points" data-ar="نقطة">points</span>
+                </div>
+            </div>
+
+            <div class="app-cert-info">
+                <div class="app-cert-info-item">
+                    <div class="app-cert-info-num">20</div>
+                    <div class="app-cert-info-label">
+                        <strong>Partie 1</strong>
+                        <span>QCM (20 questions)</span>
+                    </div>
+                </div>
+                <div class="app-cert-info-item">
+                    <div class="app-cert-info-num">20</div>
+                    <div class="app-cert-info-label">
+                        <strong>Partie 2</strong>
+                        <span>5 exercices de code</span>
+                    </div>
+                </div>
+                <div class="app-cert-info-item app-cert-info-item--goal">
+                    <div class="app-cert-info-num">90%</div>
+                    <div class="app-cert-info-label">
+                        <strong>Seuil</strong>
+                        <span>36/40 pour réussir</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-cert-action">
+                {% set ns = namespace(total=0, count=0, done=0) %}
+                {% for ex in evaluation_qcm + evaluation_code %}
+                    {% set ns.count = ns.count + 1 %}
+                    {% if ex.soumission_statut == 'graded' and ex.note is not none %}
+                        {% set ns.done = ns.done + 1 %}
+                        {% if ex.partie == 'qcm' %}
+                            {% set ns.total = ns.total + ex.note %}
+                        {% else %}
+                            {% set ns.total = ns.total + (ex.note / 20 * 4) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if certificat %}
+                    <div class="app-cert-result success">
+                        <div class="app-cert-score">
+                            <span class="app-cert-score-value">
+                                {{ certificat.score_obtenu|round(0)|int }}
+                            </span>
+                            <span class="app-cert-score-total">/{{ certificat.score_total|int }}</span>
+                        </div>
+                        <div class="app-cert-msg app-cert-msg-success">
+                            🎉 <strong>Félicitations !</strong><br>
+                            Vous avez obtenu votre certification avec un score de
+                            {{ certificat.score_obtenu|round(1) }}/{{ certificat.score_total|int }}
+                            ({{ certificat.pourcentage|round(1) }}%)
+                        </div>
+                        <a href="{{ url_for('download_certificate', niveau_id=niveau.id) }}"
+                           class="app-btn app-btn-certificate">
+                            📜 <span data-fr="Télécharger mon certificat"
+                                      data-ar="تحميل الشهادة">
+                                Télécharger mon certificat
+                            </span>
+                        </a>
+                    </div>
+
+                {% elif ns.done == ns.count and ns.count > 0 %}
+                    {% set pct = (ns.total / 40 * 100) if 40 > 0 else 0 %}
+                    {% if pct >= 90 %}
+                        <div class="app-cert-ready">
+                            <div class="app-cert-ready-icon">🎉</div>
+                            <div class="app-cert-ready-content">
+                                <strong>Félicitations, vous avez atteint le seuil de 90% !</strong>
+                                <p>Score : {{ ns.total|round(1) }}/40 ({{ pct|round(1) }}%)</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="app-cert-result fail">
+                            <div class="app-cert-score">
+                                <span class="app-cert-score-value">
+                                    {{ ns.total|round(0)|int }}
+                                </span>
+                                <span class="app-cert-score-total">/40</span>
+                            </div>
+                            <div class="app-cert-msg app-cert-msg-fail">
+                                <strong data-fr="Certification non obtenue"
+                                        data-ar="لم يتم الحصول على الشهادة">
+                                    Certification non obtenue
+                                </strong>
+                                <br>
+                                Score requis : 36/40 (90%). Votre score :
+                                {{ ns.total|round(1) }}/40 ({{ pct|round(1) }}%)
+                            </div>
+                            <p class="app-cert-hint">
+                                💡 Révisez les leçons, analysez vos erreurs ci-dessus,
+                                puis réessayez.
+                            </p>
+                            <form method="POST"
+                                  action="{{ url_for('retry_evaluation', niveau_id=niveau.id) }}"
+                                  onsubmit="return confirm('Voulez-vous vraiment refaire l\'évaluation ? Vos réponses actuelles seront supprimées.');">
+                                <button type="submit" class="app-btn app-btn-retry">
+                                    🔄 <span data-fr="Refaire l'évaluation"
+                                              data-ar="إعادة التقييم">
+                                        Refaire l'évaluation
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                {% else %}
+                    {% if exs_non_faits_count > 0 %}
+                        <div class="app-cert-locked">
+                            <div class="app-cert-locked-icon">🔒</div>
+                            <div class="app-cert-locked-content">
+                                <strong>Certification verrouillée</strong>
+                                <p>
+                                    Vous devez d'abord terminer tous les exercices du niveau
+                                    pour accéder à la certification.
+                                </p>
+                                <div class="app-cert-locked-count">
+                                    <strong>{{ exs_non_faits_count }}</strong>
+                                    <span>exercice(s) restant(s)</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="app-cert-ready">
+                            <div class="app-cert-ready-icon">✅</div>
+                            <div class="app-cert-ready-content">
+                                <strong>Vous êtes prêt pour la certification !</strong>
+                                <p>
+                                    Vous avez terminé tous les exercices du niveau.
+                                    Passez maintenant l'évaluation finale ci-dessous.
+                                </p>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- ====================================================
+                 PARTIE 1 : QCM FINAL
+                 ==================================================== -->
+            {% if evaluation_qcm and not certificat %}
+            <div class="app-eval-section">
+                <h3>
+                    <span class="app-eval-section-num">1</span>
+                    <span>Partie 1 — QCM (20 questions)</span>
+                </h3>
+            </div>
+            {% for ex in evaluation_qcm %}
+                {% set qcm = ex.qcm_data | from_json %}
+                <article class="app-exercise app-exercise-final">
+                    <header class="app-exercise-header">
+                        <div class="app-exercise-title-row">
+                            <span class="app-tag app-tag-final">QCM FINAL</span>
+                            <h3>{{ ex.titre }}</h3>
+                        </div>
+                        <div class="app-score app-score-final">20 pts</div>
+                    </header>
+                    <p class="app-exercise-desc">{{ ex.description }}</p>
+
+                    {# =========================================================
+                       LOGIQUE QCM FINAL CORRIGEE :
+                       1. QCM deja soumis -> afficher les resultats
+                       2. QCM pas soumis + tous exos normaux faits -> formulaire
+                       3. Sinon -> cadenas
+                    ========================================================= #}
+
+                    {% if ex.soumission_id %}
+                        {# ---------- 1. DEJA SOUMIS ---------- #}
+                        {% if ex.soumission_details %}
+                            {% set details = ex.soumission_details | from_json %}
+                            <div class="app-qcm-results">
+                                <div class="app-qcm-results-header">
+                                    <strong>
+                                        <span data-fr="Résultats détaillés"
+                                              data-ar="النتائج المفصلة">
+                                            Résultats détaillés
+                                        </span>
+                                    </strong>
+                                    <span class="app-qcm-results-score">{{ ex.note }}/20</span>
+                                </div>
+                                {% for d in details %}
+                                <div class="app-qcm-result-item {% if d.correcte %}correct{% else %}wrong{% endif %}">
+                                    <div class="app-qcm-result-icon">
+                                        {% if d.correcte %}✓{% else %}✗{% endif %}
+                                    </div>
+                                    <div class="app-qcm-result-content">
+                                        <strong>{{ loop.index }}. {{ d.question }}</strong>
+                                        <div class="app-qcm-result-options">
+                                            {% for opt in d.options %}
+                                            {% set opt_index = loop.index0 %}
+                                            <div class="app-qcm-result-option
+                                                        {% if opt_index == d.bonne_reponse %}is-correct{% endif %}
+                                                        {% if opt_index == d.votre_reponse and not d.correcte %}is-wrong{% endif %}">
+                                                <span class="app-qcm-result-letter">
+                                                    {{ ['A','B','C','D'][opt_index] }}
+                                                </span>
+                                                <span>{{ opt }}</span>
+                                                {% if opt_index == d.bonne_reponse %}
+                                                    <span class="app-qcm-result-tag correct">Bonne réponse</span>
+                                                {% endif %}
+                                                {% if opt_index == d.votre_reponse and not d.correcte %}
+                                                    <span class="app-qcm-result-tag wrong">Votre réponse</span>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {# QCM fait mais sans details enregistres #}
+                            <div class="app-submitted" style="margin-top:12px;">
+                                <div class="app-submitted-score">
+                                    <span data-fr="Score QCM final"
+                                          data-ar="نتيجة الاختبار النهائي">
+                                        Score QCM final
+                                    </span>
+                                    <strong>{{ ex.note }}/20</strong>
+                                </div>
+                                <p style="margin-top:10px; font-size:13px; color:var(--text-light);">
+                                    ℹ️ Les détails des réponses ne sont pas disponibles pour ce QCM.
+                                </p>
+                            </div>
+                        {% endif %}
+
+                    {% elif exs_non_faits_count == 0 %}
+                        {# ---------- 2. A FAIRE ---------- #}
+                        <form method="POST"
+                              action="{{ url_for('submit_exercise', exercice_id=ex.id) }}"
+                              class="app-qcm"
+                              onsubmit="return validateQcm(this);">
+                            {% for q in qcm %}
+                            {% set q_index = loop.index0 %}
+                            <div class="app-qcm-question">
+                                <div class="app-qcm-question-title">
+                                    <span class="app-qcm-num">{{ loop.index }}</span>
+                                    <span>{{ q.question }}</span>
+                                </div>
+                                <div class="app-qcm-options">
+                                    {% for opt in q.options %}
+                                    <label class="app-qcm-option">
+                                        <input type="radio" name="q_{{ q_index }}"
+                                               value="{{ loop.index0 }}" required>
+                                        <span class="app-qcm-radio"></span>
+                                        <span class="app-qcm-text">{{ opt }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="app-btn app-btn-primary">
+                                Valider mes réponses
+                            </button>
+                        </form>
+
+                    {% else %}
+                        {# ---------- 3. VERROUILLE ---------- #}
+                        <div class="app-locked-note">
+                            🔒 Terminez les exercices du niveau pour déverrouiller
+                            ({{ exs_non_faits_count }} exercice(s) restant(s)).
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+            {% endif %}
+
+            <!-- ====================================================
+                 PARTIE 2 : CODE FINAL
+                 ==================================================== -->
+            {% if evaluation_code and not certificat %}
+            <div class="app-eval-section">
+                <h3>
+                    <span class="app-eval-section-num">2</span>
+                    <span>Partie 2 — Exercices de code (5 exercices)</span>
+                </h3>
+            </div>
+            {% for ex in evaluation_code %}
+                <article class="app-exercise app-exercise-final">
+                    <header class="app-exercise-header">
+                        <div class="app-exercise-title-row">
+                            <span class="app-tag app-tag-final-code">CODE FINAL</span>
+                            <h3>{{ ex.titre }}</h3>
+                        </div>
+                        <div class="app-score app-score-final">4 pts</div>
+                    </header>
+                    <p class="app-exercise-desc">{{ ex.description }}</p>
+
+                    {% if ex.contenu and not ex.soumission_id %}
+                    <div class="app-instructions">
+                        <div class="app-instructions-label">Énoncé</div>
+                        <p>{{ ex.contenu }}</p>
+                    </div>
+                    {% endif %}
+
+                    {# =========================================================
+                       LOGIQUE CODE FINAL CORRIGEE :
+                       1. Deja corrige (graded) -> afficher le score + feedback
+                       2. Soumis en attente -> afficher le code
+                       3. Pas soumis + tous exos normaux faits -> formulaire
+                       4. Sinon -> cadenas
+                    ========================================================= #}
+
+                    {% if ex.soumission_statut == 'graded' %}
+                        {# ---------- 1. DEJA CORRIGE ---------- #}
+                        <div class="app-submitted">
+                            <div class="app-submitted-label">Votre code</div>
+                            <pre class="app-submitted-content">{{ ex.soumission_contenu or '' }}</pre>
+                            <div class="app-submitted-score">
+                                <span>Score Code</span>
+                                <strong>{{ ex.note }}/20</strong>
+                            </div>
+                            {% if ex.soumission_commentaire %}
+                            <div class="app-feedback">
+                                <div class="app-feedback-label">
+                                    💬 Commentaire du formateur
+                                </div>
+                                <p>{{ ex.soumission_commentaire }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    {% elif ex.soumission_statut == 'submitted' %}
+                        {# ---------- 2. EN ATTENTE ---------- #}
+                        <div class="app-submitted">
+                            <div class="app-submitted-label">Votre code</div>
+                            <pre class="app-submitted-content">{{ ex.soumission_contenu or '' }}</pre>
+                            <div class="app-score app-score-await" style="margin-top:12px;">
+                                En attente de correction
+                            </div>
+                        </div>
+
+                    {% elif exs_non_faits_count == 0 %}
+                        {# ---------- 3. A FAIRE ---------- #}
+                        <div class="app-platform">
+                            <div class="app-platform-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </div>
+                            <div class="app-platform-info">
+                                <strong>Pratiquer en ligne</strong>
+                                <small>Google Colab — Python</small>
+                            </div>
+                            <a href="https://colab.research.google.com/" target="_blank" rel="noopener" class="app-platform-btn">
+                                Ouvrir
+                            </a>
+                        </div>
+                        <form method="POST"
+                              action="{{ url_for('submit_exercise', exercice_id=ex.id) }}"
+                              class="app-form">
+                            <textarea name="contenu" rows="8" required
+                                      class="app-textarea app-textarea-code"
+                                      placeholder="Écrivez votre code Python ici..."></textarea>
+                            <button type="submit" class="app-btn app-btn-primary">
+                                Envoyer mon code
+                            </button>
+                        </form>
+
+                    {% else %}
+                        {# ---------- 4. VERROUILLE ---------- #}
+                        <div class="app-locked-note">
+                            🔒 Terminez les exercices du niveau pour déverrouiller
+                            ({{ exs_non_faits_count }} exercice(s) restant(s)).
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+            {% endif %}
+        </section>
+        {% endif %}
+
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

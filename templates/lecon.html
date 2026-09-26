@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lecon.titre }} — Soft Learn</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<!-- =========================================================
+     BARRE SUPÉRIEURE
+========================================================= -->
+
+<header class="app-header">
+    <div class="app-header-inner">
+
+        <div class="app-header-left">
+            <a href="{{ url_for('level_detail', niveau_id=lecon.niveau_id) }}"
+               class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Retour au niveau" data-ar="العودة إلى المستوى">
+                    Retour au niveau
+                </span>
+            </a>
+
+            <div class="app-separator"></div>
+
+            <div class="app-crumb">
+                <span class="app-crumb-formation">Chapitre {{ lecon.chapitre_numero }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">Leçon {{ lecon.numero }}</span>
+            </div>
+        </div>
+
+        <div class="app-header-right">
+            <button class="app-icon-btn" type="button" onclick="toggleLanguage()">
+                <span id="languageIcon">🌐</span>
+                <span id="languageText" class="app-icon-label">FR</span>
+            </button>
+            <button class="app-icon-btn" id="darkModeBtn" type="button" onclick="toggleDarkMode()">
+                🌙
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- =========================================================
+     CORPS
+========================================================= -->
+
+<div class="app-layout">
+
+    <!-- SIDEBAR : SOMMAIRE DE LA LEÇON -->
+    <aside class="app-sidebar">
+
+        <div class="app-sidebar-hero app-sidebar-hero-lecon">
+            <span class="app-sidebar-badge">
+                Chapitre {{ lecon.chapitre_numero }}
+            </span>
+            <h2 class="app-sidebar-title">{{ lecon.chapitre_titre }}</h2>
+
+            <div class="app-sidebar-meta">
+                <div class="app-sidebar-meta-row">
+                    <span data-fr="Durée estimée" data-ar="المدة المتوقعة">
+                        Durée estimée
+                    </span>
+                    <strong>{{ lecon.duree }} min</strong>
+                </div>
+                <div class="app-sidebar-meta-row">
+                    <span data-fr="Statut" data-ar="الحالة">Statut</span>
+                    <strong class="app-status-done">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span data-fr="Lue" data-ar="مقروءة">Lue</span>
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <nav class="app-nav">
+            <div class="app-nav-label">
+                <span data-fr="Progression" data-ar="التقدم">Progression</span>
+            </div>
+
+            <div class="app-nav-lesson-preview">
+                <div class="app-lesson-before">
+                    <span data-fr="Vous êtes ici" data-ar="أنت هنا">Vous êtes ici</span>
+                    <strong>{{ lecon.titre }}</strong>
+                </div>
+            </div>
+        </nav>
+
+        <div class="app-sidebar-footer">
+            <a href="{{ url_for('level_detail', niveau_id=lecon.niveau_id) }}"
+               class="app-btn app-btn-ghost app-btn-full">
+                <span data-fr="Voir tous les exercices"
+                      data-ar="عرض جميع التمارين">
+                    Voir tous les exercices
+                </span>
+            </a>
+        </div>
+
+    </aside>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="app-main">
+
+        <article class="app-lesson">
+
+            <!-- En-tête de la leçon -->
+            <header class="app-lesson-header">
+                <span class="app-lesson-chapter">
+                    Chapitre {{ lecon.chapitre_numero }} · {{ lecon.chapitre_titre }}
+                </span>
+                <h1 class="app-lesson-title">{{ lecon.titre }}</h1>
+                <div class="app-lesson-meta">
+                    <span class="app-lesson-meta-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        {{ lecon.duree }} min
+                    </span>
+                    <span class="app-lesson-meta-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span data-fr="Marquée comme lue" data-ar="تم وضع علامة مقروءة">
+                            Marquée comme lue
+                        </span>
+                    </span>
+                </div>
+            </header>
+
+            <!-- Contenu -->
+            <div class="app-lesson-content">
+                {{ lecon.contenu | markdown }}
+            </div>
+
+            <!-- Navigation bas de page -->
+            <nav class="app-lesson-nav">
+                {% if lecon_prec %}
+                <a href="{{ url_for('view_lecon', lecon_id=lecon_prec.id) }}"
+                   class="app-nav-btn app-nav-btn-prev">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    <div class="app-nav-btn-content">
+                        <small data-fr="Précédent" data-ar="السابق">Précédent</small>
+                    </div>
+                </a>
+                {% else %}
+                <span></span>
+                {% endif %}
+
+                {% if lecon_suiv %}
+                <a href="{{ url_for('view_lecon', lecon_id=lecon_suiv.id) }}"
+                   class="app-nav-btn app-nav-btn-next">
+                    <div class="app-nav-btn-content">
+                        <small data-fr="Suivant" data-ar="التالي">Suivant</small>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                {% else %}
+                <a href="{{ url_for('level_detail', niveau_id=lecon.niveau_id) }}"
+                   class="app-nav-btn app-nav-btn-finish">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <div class="app-nav-btn-content">
+                        <small data-fr="Terminer" data-ar="إنهاء">Terminer</small>
+                    </div>
+                </a>
+                {% endif %}
+            </nav>
+
+        </article>
+
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

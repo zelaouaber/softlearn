@@ -1,0 +1,12 @@
+Flask
+Werkzeug
+Jinja2
+MarkupSafe
+itsdangerous
+click
+blinker
+reportlab
+Markdown
+psycopg2-binary
+gunicorn
+python-dotenv

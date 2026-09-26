@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier exercice — {{ ex.titre }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-left">
+            <a href="{{ url_for('dashboard', section='niveaux') }}" class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Retour" data-ar="رجوع">Retour</span>
+            </a>
+            <div class="app-separator"></div>
+            <div class="app-crumb">
+                <span class="app-crumb-formation">{{ ex.formation_nom }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">{{ ex.niveau_titre }}</span>
+            </div>
+        </div>
+        <div class="app-header-right">
+            <span class="app-tag app-tag-edit">ÉDITION</span>
+            <a href="{{ url_for('view_exercise_trainer', exercice_id=ex.id) }}"
+               class="app-btn app-btn-ghost">
+                👁️ <span data-fr="Aperçu" data-ar="معاينة">Aperçu</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="app-main" style="max-width: 900px; margin: 30px auto; padding: 0 25px;">
+
+    <div class="app-preview-banner app-edit-banner">
+        <div class="app-preview-icon">✏️</div>
+        <div class="app-preview-content">
+            <strong data-fr="Modification de l'exercice"
+                    data-ar="تعديل التمرين">
+                Modification de l'exercice
+            </strong>
+            <p data-fr="Modifiez les champs ci-dessous puis enregistrez."
+               data-ar="عدّل الحقول أدناه ثم احفظ.">
+                Modifiez les champs ci-dessous puis enregistrez.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('edit_exercise', exercice_id=ex.id) }}"
+          class="app-edit-form">
+
+        <div class="form-group">
+            <label for="titre" data-fr="Titre" data-ar="العنوان">Titre</label>
+            <input id="titre" type="text" name="titre"
+                   value="{{ ex.titre }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description" data-fr="Description" data-ar="الوصف">
+                Description
+            </label>
+            <textarea id="description" name="description"
+                      rows="3">{{ ex.description or '' }}</textarea>
+        </div>
+
+        <div class="app-edit-row">
+            <div class="form-group">
+                <label for="type" data-fr="Type d'exercice" data-ar="نوع التمرين">
+                    Type d'exercice
+                </label>
+                <select id="type" name="type">
+                    <option value="texte" {% if ex.type == 'texte' %}selected{% endif %}>
+                        ✍️ Réponse libre
+                    </option>
+                    <option value="code" {% if ex.type == 'code' %}selected{% endif %}>
+                        💻 Code
+                    </option>
+                    <option value="qcm" {% if ex.type == 'qcm' %}selected{% endif %}>
+                        🔘 QCM
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="langage" data-fr="Langage" data-ar="اللغة">
+                    Langage
+                </label>
+                <input id="langage" type="text" name="langage"
+                       value="{{ ex.langage or '' }}"
+                       placeholder="python, cpp...">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="contenu" data-fr="Instructions" data-ar="التعليمات">
+                Instructions
+            </label>
+            <textarea id="contenu" name="contenu"
+                      rows="4">{{ ex.contenu or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="reponse_attendue"
+                   data-fr="Réponse attendue (pour l'IA)"
+                   data-ar="الإجابة المتوقعة (للذكاء الاصطناعي)">
+                Réponse attendue (pour l'IA)
+            </label>
+            <textarea id="reponse_attendue" name="reponse_attendue"
+                      rows="3">{{ ex.reponse_attendue or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="plateforme_url"
+                   data-fr="URL de plateforme (optionnel)"
+                   data-ar="رابط المنصة (اختياري)">
+                URL de plateforme (optionnel)
+            </label>
+            <input id="plateforme_url" type="text" name="plateforme_url"
+                   value="{{ ex.plateforme_url or '' }}"
+                   placeholder="https://colab.research.google.com/">
+        </div>
+
+        {% if ex.type == 'qcm' %}
+        <div class="form-group">
+            <label for="qcm_data"
+                   data-fr="Données QCM (format JSON)"
+                   data-ar="بيانات الاختبار (JSON)">
+                Données QCM (format JSON)
+            </label>
+            <div class="form-hint">
+                <strong data-fr="Format attendu :" data-ar="الصيغة المطلوبة:">
+                    Format attendu :
+                </strong>
+                <pre style="margin:8px 0; padding:10px; background:#f1f5f9; border-radius:6px; font-size:12px; overflow-x:auto;">[
+  {
+    "question": "Quelle est la bonne réponse ?",
+    "options": ["Option A", "Option B", "Option C"],
+    "bonne": 1
+  }
+]</pre>
+                <p>
+                    <span data-fr="Le champ « bonne » correspond à l'index de la bonne réponse (0 = première option)."
+                          data-ar="حقل «bonne» يمثل فهرس الإجابة الصحيحة (0 = الخيار الأول).">
+                        Le champ « bonne » correspond à l'index de la bonne réponse
+                        (0 = première option).
+                    </span>
+                </p>
+            </div>
+            <textarea id="qcm_data" name="qcm_data"
+                      rows="15"
+                      class="app-edit-textarea">{{ ex.qcm_data or '' }}</textarea>
+        </div>
+        {% endif %}
+
+        <div class="app-edit-actions">
+            <a href="{{ url_for('dashboard', section='niveaux') }}"
+               class="app-btn app-btn-ghost">
+                <span data-fr="Annuler" data-ar="إلغاء">Annuler</span>
+            </a>
+            <a href="{{ url_for('view_exercise_trainer', exercice_id=ex.id) }}"
+               class="app-btn app-btn-ghost">
+                👁️ <span data-fr="Aperçu" data-ar="معاينة">Aperçu</span>
+            </a>
+            <button type="submit" class="app-btn app-btn-primary">
+                💾 <span data-fr="Enregistrer" data-ar="حفظ">Enregistrer</span>
+            </button>
+        </div>
+    </form>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

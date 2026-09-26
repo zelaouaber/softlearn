@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aperçu exercice — {{ ex.titre }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-left">
+            <a href="{{ url_for('dashboard', section='niveaux') }}" class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Retour" data-ar="رجوع">Retour</span>
+            </a>
+            <div class="app-separator"></div>
+            <div class="app-crumb">
+                <span class="app-crumb-formation">{{ ex.formation_nom }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">{{ ex.niveau_titre }}</span>
+            </div>
+        </div>
+        <div class="app-header-right">
+            <span class="app-tag app-tag-preview"
+                  data-fr="APERÇU FORMATEUR"
+                  data-ar="معاينة المدرب">
+                APERÇU FORMATEUR
+            </span>
+            <a href="{{ url_for('edit_exercise', exercice_id=ex.id) }}"
+               class="app-btn app-btn-primary">
+                ✏️ <span data-fr="Modifier" data-ar="تعديل">Modifier</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="app-main" style="max-width: 900px; margin: 30px auto; padding: 0 25px;">
+
+    <div class="app-preview-banner">
+        <div class="app-preview-icon">👁️</div>
+        <div class="app-preview-content">
+            <strong data-fr="Mode aperçu" data-ar="وضع المعاينة">Mode aperçu</strong>
+            <p data-fr="Voici comment vos étudiants voient cet exercice."
+               data-ar="هكذا يرى طلابك هذا التمرين.">
+                Voici comment vos étudiants voient cet exercice.
+            </p>
+        </div>
+    </div>
+
+    <!-- En-tête -->
+    <div class="app-exercise app-exercise-final">
+        <header class="app-exercise-header">
+            <div class="app-exercise-title-row">
+                {% if ex.type == 'qcm' %}
+                    <span class="app-tag app-tag-qcm">QCM</span>
+                {% elif ex.type == 'code' %}
+                    <span class="app-tag app-tag-code">CODE</span>
+                {% else %}
+                    <span class="app-tag app-tag-text">TEXTE</span>
+                {% endif %}
+                <h3>{{ ex.titre }}</h3>
+            </div>
+            <div class="app-score app-score-final">
+                {% if ex.est_evaluation_finale %}20 pts{% endif %}
+            </div>
+        </header>
+
+        <p class="app-exercise-desc">{{ ex.description }}</p>
+
+        {% if ex.contenu %}
+        <div class="app-instructions">
+            <div class="app-instructions-label">Instructions</div>
+            <p>{{ ex.contenu }}</p>
+        </div>
+        {% endif %}
+
+        {% if ex.langage %}
+        <p><strong>Langage :</strong> <code>{{ ex.langage }}</code></p>
+        {% endif %}
+
+        {% if ex.plateforme_url %}
+        <p><strong>Plateforme :</strong>
+            <a href="{{ ex.plateforme_url }}" target="_blank">{{ ex.plateforme_url }}</a>
+        </p>
+        {% endif %}
+
+        {% if ex.type == 'qcm' and ex.qcm_data %}
+        {% set qcm = ex.qcm_data | from_json %}
+        <div class="app-qcm" style="margin-top:20px;">
+            {% for q in qcm %}
+            <div class="app-qcm-question">
+                <div class="app-qcm-question-title">
+                    <span class="app-qcm-num">{{ loop.index }}</span>
+                    <span>{{ q.question }}</span>
+                </div>
+                <div class="app-qcm-options">
+                    {% for opt in q.options %}
+                    <label class="app-qcm-option">
+                        <span class="app-qcm-radio"></span>
+                        <span class="app-qcm-text">
+                            {{ opt }}
+                            {% if loop.index0 == q.bonne %}
+                                <strong style="color: #20a464;"> ✓ Bonne réponse</strong>
+                            {% endif %}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if ex.reponse_attendue %}
+        <div class="app-instructions" style="margin-top:20px; border-left-color: #20a464;">
+            <div class="app-instructions-label" style="color: #20a464;">
+                ✅ Réponse attendue
+            </div>
+            <p>{{ ex.reponse_attendue }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="app-edit-actions" style="margin-top:25px;">
+        <a href="{{ url_for('dashboard', section='niveaux') }}"
+           class="app-btn app-btn-ghost">
+            ← <span data-fr="Retour" data-ar="رجوع">Retour</span>
+        </a>
+        <a href="{{ url_for('edit_exercise', exercice_id=ex.id) }}"
+           class="app-btn app-btn-primary">
+            ✏️ <span data-fr="Modifier" data-ar="تعديل">Modifier</span>
+        </a>
+    </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

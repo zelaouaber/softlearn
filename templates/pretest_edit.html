@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier pré-test — {{ pretest.titre }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-left">
+            <a href="{{ url_for('dashboard', section='niveaux') }}" class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Retour" data-ar="رجوع">Retour</span>
+            </a>
+            <div class="app-separator"></div>
+            <div class="app-crumb">
+                <span class="app-crumb-formation">{{ pretest.formation_nom }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">{{ pretest.niveau_titre }}</span>
+            </div>
+        </div>
+        <div class="app-header-right">
+            <span class="app-tag app-tag-edit">ÉDITION</span>
+            <a href="{{ url_for('view_pretest_trainer', niveau_id=pretest.niveau_id) }}"
+               class="app-btn app-btn-ghost">
+                👁️ <span data-fr="Aperçu" data-ar="معاينة">Aperçu</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<main class="app-main" style="max-width: 900px; margin: 30px auto; padding: 0 25px;">
+
+    <div class="app-preview-banner app-edit-banner">
+        <div class="app-preview-icon">✏️</div>
+        <div class="app-preview-content">
+            <strong data-fr="Modification du pré-test"
+                    data-ar="تعديل الاختبار القبلي">
+                Modification du pré-test
+            </strong>
+        </div>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('edit_pretest', niveau_id=pretest.niveau_id) }}"
+          class="app-edit-form">
+
+        <div class="form-group">
+            <label for="titre" data-fr="Titre du pré-test" data-ar="عنوان الاختبار">
+                Titre du pré-test
+            </label>
+            <input id="titre" type="text" name="titre"
+                   value="{{ pretest.titre }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description" data-fr="Description" data-ar="الوصف">
+                Description
+            </label>
+            <textarea id="description" name="description"
+                      rows="3">{{ pretest.description or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="seuil" data-fr="Seuil de réussite (%)"
+                   data-ar="عتبة النجاح (%)">
+                Seuil de réussite (%)
+            </label>
+            <input id="seuil" type="number" name="seuil"
+                   min="30" max="100"
+                   value="{{ pretest.seuil_reussite }}">
+        </div>
+
+        <div class="form-group">
+            <label data-fr="Questions" data-ar="الأسئلة">Questions</label>
+
+            {% set qcm = pretest.qcm_data | from_json %}
+
+            <div id="questionsContainer">
+                {% for q in qcm %}
+                <div class="pretest-question-block" id="qblock_{{ loop.index0 }}">
+                    <div class="form-group">
+                        <label>Question {{ loop.index }}</label>
+                        <input name="question_{{ loop.index0 }}"
+                               value="{{ q.question }}" required>
+                    </div>
+                    <div class="form-row">
+                        <input name="q{{ loop.index0 }}_opt0"
+                               value="{{ q.options[0] if q.options|length > 0 else '' }}"
+                               placeholder="Option A" required>
+                        <input name="q{{ loop.index0 }}_opt1"
+                               value="{{ q.options[1] if q.options|length > 1 else '' }}"
+                               placeholder="Option B" required>
+                    </div>
+                    <div class="form-row">
+                        <input name="q{{ loop.index0 }}_opt2"
+                               value="{{ q.options[2] if q.options|length > 2 else '' }}"
+                               placeholder="Option C (optionnel)">
+                        <input name="q{{ loop.index0 }}_opt3"
+                               value="{{ q.options[3] if q.options|length > 3 else '' }}"
+                               placeholder="Option D (optionnel)">
+                    </div>
+                    <div class="form-group">
+                        <label>Réponse correcte (0=A, 1=B, 2=C, 3=D)</label>
+                        <input type="number" name="q{{ loop.index0 }}_bonne"
+                               min="0" max="3" value="{{ q.bonne }}" required>
+                    </div>
+                    <button type="button" class="dashboard-btn danger small"
+                            onclick="document.getElementById('qblock_{{ loop.index0 }}').remove()">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" class="dashboard-btn secondary"
+                    onclick="addQuestion()" style="margin-top:10px;">
+                ➕ <span data-fr="Ajouter une question" data-ar="إضافة سؤال">
+                    Ajouter une question
+                </span>
+            </button>
+        </div>
+
+        <div class="app-edit-actions">
+            <a href="{{ url_for('dashboard', section='niveaux') }}"
+               class="app-btn app-btn-ghost">
+                <span data-fr="Annuler" data-ar="إلغاء">Annuler</span>
+            </a>
+            <button type="submit" class="app-btn app-btn-primary">
+                💾 <span data-fr="Enregistrer" data-ar="حفظ">Enregistrer</span>
+            </button>
+        </div>
+    </form>
+
+</main>
+
+<script>
+/* Initialiser le compteur de question avec le nombre actuel */
+let questionCount = {{ (pretest.qcm_data | from_json) | length }};
+</script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

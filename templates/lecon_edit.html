@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier — {{ lecon.titre }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-left">
+            <a href="{{ url_for('dashboard', section='niveaux') }}" class="app-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span data-fr="Retour aux niveaux" data-ar="العودة إلى المستويات">
+                    Retour aux niveaux
+                </span>
+            </a>
+
+            <div class="app-separator"></div>
+
+            <div class="app-crumb">
+                <span class="app-crumb-formation">{{ lecon.formation_nom }}</span>
+                <span class="app-crumb-sep">/</span>
+                <span class="app-crumb-level">{{ lecon.chapitre_titre }}</span>
+            </div>
+        </div>
+
+        <div class="app-header-right">
+            <span class="app-tag app-tag-edit"
+                  data-fr="ÉDITION"
+                  data-ar="تحرير">
+                ÉDITION
+            </span>
+
+            <a href="{{ url_for('view_lecon_trainer', lecon_id=lecon.id) }}"
+               class="app-btn app-btn-ghost">
+                👁️ <span data-fr="Aperçu" data-ar="معاينة">Aperçu</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- =========================================================
+     CONTENU
+========================================================= -->
+
+<main class="app-main" style="max-width: 900px; margin: 30px auto; padding: 0 25px;">
+
+    <!-- Bandeau info -->
+    <div class="app-preview-banner app-edit-banner">
+        <div class="app-preview-icon">✏️</div>
+        <div class="app-preview-content">
+            <strong data-fr="Modification de la leçon"
+                    data-ar="تعديل الدرس">
+                Modification de la leçon
+            </strong>
+            <p data-fr="Modifiez le contenu ci-dessous puis cliquez sur Enregistrer."
+               data-ar="عدّل المحتوى أدناه ثم انقر على حفظ.">
+                Modifiez le contenu ci-dessous puis cliquez sur Enregistrer.
+            </p>
+        </div>
+    </div>
+
+    <!-- Formulaire -->
+    <form method="POST"
+          action="{{ url_for('edit_lecon', lecon_id=lecon.id) }}"
+          class="app-edit-form">
+
+        <div class="app-edit-row">
+
+            <div class="form-group">
+                <label for="numero"
+                       data-fr="Numéro de la leçon"
+                       data-ar="رقم الدرس">
+                    Numéro de la leçon
+                </label>
+                <input id="numero"
+                       type="number"
+                       name="numero"
+                       min="1"
+                       value="{{ lecon.numero }}"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="duree"
+                       data-fr="Durée (min)"
+                       data-ar="المدة (دقيقة)">
+                    Durée (min)
+                </label>
+                <input id="duree"
+                       type="number"
+                       name="duree"
+                       min="1"
+                       value="{{ lecon.duree or 5 }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="titre"
+                   data-fr="Titre de la leçon"
+                   data-ar="عنوان الدرس">
+                Titre de la leçon
+            </label>
+            <input id="titre"
+                   type="text"
+                   name="titre"
+                   value="{{ lecon.titre }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="contenu"
+                   data-fr="Contenu de la leçon (Markdown supporté)"
+                   data-ar="محتوى الدرس (Markdown مدعوم)">
+                Contenu de la leçon (Markdown supporté)
+            </label>
+
+            <div class="form-hint">
+                <strong data-fr="Syntaxe supportée :" data-ar="الصيغة المدعومة:">
+                    Syntaxe supportée :
+                </strong>
+                <ul>
+                    <li data-fr="## Titre, ### Sous-titre"
+                        data-ar="## عنوان، ### عنوان فرعي">
+                        <code>## Titre</code>, <code>### Sous-titre</code>
+                    </li>
+                    <li data-fr="**Gras**, *Italique*, `code inline`"
+                        data-ar="**عريض**، *مائل*، `كود مضمّن`">
+                        <code>**Gras**</code>, <code>*Italique*</code>,
+                        <code>`code`</code>
+                    </li>
+                    <li data-fr="Tableaux | colonnes |, listes - item, blocs ```code```"
+                        data-ar="جداول | أعمدة |، قوائم - عنصر، كتل ```كود```">
+                        Tableaux <code>| col1 | col2 |</code>, listes
+                        <code>- item</code>, blocs <code>```code```</code>
+                    </li>
+                </ul>
+            </div>
+
+            <textarea id="contenu"
+                      name="contenu"
+                      rows="25"
+                      required
+                      class="app-edit-textarea">{{ lecon.contenu }}</textarea>
+        </div>
+
+        <div class="app-edit-actions">
+            <a href="{{ url_for('dashboard', section='niveaux') }}"
+               class="app-btn app-btn-ghost">
+                <span data-fr="Annuler" data-ar="إلغاء">Annuler</span>
+            </a>
+
+            <a href="{{ url_for('view_lecon_trainer', lecon_id=lecon.id) }}"
+               class="app-btn app-btn-ghost">
+                👁️ <span data-fr="Aperçu" data-ar="معاينة">Aperçu</span>
+            </a>
+
+            <button type="submit" class="app-btn app-btn-primary">
+                💾 <span data-fr="Enregistrer les modifications"
+                          data-ar="حفظ التعديلات">
+                    Enregistrer les modifications
+                </span>
+            </button>
+        </div>
+    </form>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
