@@ -1037,5 +1037,10 @@
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
+<script>
+    // Reset la section dashboard mémorisée quand on revient sur la page publique
+    localStorage.removeItem("softlearn-last-section");
+</script>
+
 </body>
 </html>
