@@ -86,7 +86,22 @@ def from_json_filter(s):
     except (ValueError, TypeError):
         return []
 
-
+@app.template_filter('date_str')
+def date_str_filter(value, fmt='%Y-%m-%d'):
+    """
+    Convertit une date (datetime, date, ou string) en chaîne de caractères.
+    - Si c'est un objet datetime/date, on utilise strftime.
+    - Si c'est déjà une string, on la retourne (en coupant à 10 char si demandé).
+    """
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        # Si c'est une string ISO, on peut couper
+        return value[:10]
+    try:
+        return value.strftime(fmt)
+    except (AttributeError, ValueError):
+        return str(value)[:10]
 # =========================================================
 # HELPERS
 # =========================================================

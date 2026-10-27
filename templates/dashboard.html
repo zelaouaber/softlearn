@@ -1138,7 +1138,7 @@
                 <h3>{{ t.prenom }} {{ t.nom }}</h3>
                 <p>📧 {{ t.email }}</p>
                 <p>📞 {{ t.telephone or '-' }}</p>
-                <p>📅 {{ t.created_at[:10] }}</p>
+                <p>📅 {{ t.created_at | date_str }}</p>
             </div>
         </div>
 
@@ -1214,7 +1214,7 @@
                         {% endif %}
                     </td>
                     <td>{{ t.motif_refus or '-' }}</td>
-                    <td>{{ (t.date_validation or '')[:10] }}</td>
+                    <td>{{ t.date_validation | date_str }}</td>
                 </tr>
                 {% endif %}
             {% endfor %}
@@ -1312,7 +1312,7 @@
                     <td>{{ p.formation_nom }}</td>
                     <td>{{ p.numero }} — {{ p.titre }}</td>
                     <td><strong style="color:var(--success);">{{ p.montant }} DA</strong></td>
-                    <td>{{ p.date_paiement[:10] }}</td>
+                    <td>{{ p.date_paiement | date_str }}</td>
                 </tr>
             {% else %}
                 <tr><td colspan="6" style="text-align:center;">
@@ -1363,7 +1363,7 @@
                     <td>{{ p.formation_nom }}</td>
                     <td>{{ p.numero }} — {{ p.titre }}</td>
                     <td>{{ p.montant }} DA</td>
-                    <td>{{ p.date_paiement[:10] }}</td>
+                    <td>{{ p.date_paiement | date_str }}</td>
                 </tr>
             {% else %}
                 <tr><td colspan="5" style="text-align:center;">
